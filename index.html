@@ -23,7 +23,9 @@ nav .chips::-webkit-scrollbar{display:none}
 nav a{flex:none;font-size:.85rem;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--card);white-space:nowrap}
 nav a .n{color:var(--bad);margin-left:4px;font-weight:600}
 .card,.sec{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:14px 16px;scroll-margin-top:88px}
-.cfg{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.95rem}
+.cfg{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.95rem;margin-top:12px}
+.cfgnote{margin:12px 0 0;padding-left:1.2em}
+.cfgnote li{margin:4px 0}
 .cfg label{display:flex;align-items:center;gap:6px}
 .cfg input{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
 .cfg input[type=number],.cfg #code{width:3.4em}
@@ -73,14 +75,14 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .mode{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
 .mode button{font:inherit;font-size:.95rem;padding:6px 20px;border:0;background:var(--card);color:var(--muted);cursor:pointer}
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-body[data-mode="re"] nav,body[data-mode="re"] .cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
+body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .row button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 .ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
 footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
-@media print{nav,.bar,.pbar,.cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
+@media print{nav,.bar,.pbar,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
 </style>
 </head>
 <body>
@@ -109,16 +111,24 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     </section>
   </section>
 
-  <section class="card cfg" aria-label="基本設定">
-    <label>臥室 <input type="number" min="1" max="6" data-c="bed"> 間</label>
-    <label>浴室 <input type="number" min="1" max="6" data-c="bath"> 間</label>
-    <label>陽台 <input type="number" min="1" max="6" data-c="balc"> 處</label>
-    <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
-    <label class="unit">戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
-  </section>
+  <details class="sec" id="sec-cfg">
+    <summary><span class="t">基本設定</span><span class="prog" id="cfg-sum"></span></summary>
+    <div class="cfg">
+      <label>臥室 <input type="number" min="1" max="6" data-c="bed"> 間</label>
+      <label>浴室 <input type="number" min="1" max="6" data-c="bath"> 間</label>
+      <label>陽台 <input type="number" min="1" max="6" data-c="balc"> 處</label>
+      <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
+      <label class="unit">戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
+    </div>
+    <ul class="sub cfgnote">
+      <li><b>臥室、浴室、陽台</b>：照實際格局填，下面就會列出對應數量的檢查區塊，例如 3 房 2 衛 1 陽台。</li>
+      <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號。一個人驗可以不填。</li>
+      <li><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
+    </ul>
+  </details>
 
   <details class="sec" id="sec-pack">
-    <summary><span class="t">帶去清單</span><span class="prog" id="pk-prog"></span></summary>
+    <summary><span class="t">建議攜帶工具清單</span><span class="prog" id="pk-prog"></span></summary>
     <div id="pack"></div>
   </details>
 
@@ -129,7 +139,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
-      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面各填不同的代號。</li>
+      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面的「基本設定」各填不同的代號。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
       <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
@@ -378,7 +388,7 @@ function render(){
       `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"></div>`).join('')).join('')+
     `</details>`).join('');
   document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
-  $('#nav').innerHTML=`<a href="#sec-pack">帶去清單</a><a href="#sec-flow">流程</a>`+secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
+  $('#nav').innerHTML=`<a href="#sec-pack">建議攜帶工具清單</a><a href="#sec-flow">流程</a>`+secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
   document.querySelectorAll('[data-c]').forEach(x=>x.value=S.c[x.dataset.c]);
   $('#unit').value=S.unit;
   $('#code').value=S.code;
@@ -411,6 +421,7 @@ function update(){
   $('#pk-prog').textContent=`已備 ${pc}/${pk.length}`;
   $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`;
   $('#tot-t').textContent=`總進度 ${D}/${N} · ${Math.round(D/N*100)}%`;
+  $('#cfg-sum').textContent=`${S.c.bed} 臥 · ${S.c.bath} 衛 · ${S.c.balc} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
   fill($('#tot-bar'),D,bad,N);
 }
 
@@ -428,7 +439,7 @@ document.addEventListener('input',e=>{
   const t=e.target;
   if(t.classList.contains('note')){const it=t.closest('.item'),R=it.dataset.r!==undefined,o=R?S.r.n:S.n,k=R?it.dataset.r:it.dataset.k;if(t.value)o[k]=t.value;else delete o[k];save();}
   else if(t.id==='unit'){S.unit=t.value;save();}
-  else if(t.id==='code'){S.code=t.value;save();document.querySelectorAll('#rooms .item').forEach(it=>setState(it,S.v[it.dataset.k]||0));}
+  else if(t.id==='code'){S.code=t.value;save();document.querySelectorAll('#rooms .item').forEach(it=>setState(it,S.v[it.dataset.k]||0));update();}
 });
 document.addEventListener('change',e=>{
   const t=e.target;
@@ -508,7 +519,7 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？帶去清單、間數、戶別、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？攜帶工具清單、間數、戶別、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
