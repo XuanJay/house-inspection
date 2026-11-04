@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>新成屋驗屋檢查表</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--fg:#1f2328;--muted:#5f666e;--line:#dedbd4;--accent:#2f6fb0;--ok:#2e7d4f;--ok-bg:#e3f2e8;--bad:#c0392b;--bad-bg:#fbe5e1;--note:#fff8e1;--on-accent:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}}
+:root[data-theme="dark"]{--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding-bottom:84px}
+main{max-width:760px;margin:0 auto;padding:0 16px}
+header{max-width:760px;margin:0 auto;padding:20px 16px 8px}
+h1{font-size:1.45rem;margin:0 0 4px}
+h2{font-size:1.1rem;margin:0 0 8px}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+nav .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;max-width:760px;margin:0 auto;scrollbar-width:none}
+nav .chips::-webkit-scrollbar{display:none}
+nav a{flex:none;font-size:.85rem;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--card);white-space:nowrap}
+nav a .n{color:var(--bad);margin-left:4px;font-weight:600}
+.card,.sec{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:12px 0;padding:14px 16px;scroll-margin-top:56px}
+.cfg{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.95rem}
+.cfg label{display:flex;align-items:center;gap:6px}
+.cfg input{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.cfg input[type=number],.cfg #code{width:3.4em}
+.cfg .unit{flex:1 1 220px}
+.cfg .unit input{flex:1;min-width:0}
+ol.flow{margin:0;padding-left:1.4em}
+ol.flow li{margin:4px 0}
+summary{cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:8px;list-style:none;font-weight:700;font-size:1.1rem}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸";color:var(--muted);margin-right:6px;font-size:.9rem}
+details[open]>summary::before{content:"▾"}
+summary .t{flex:1}
+.prog{font-size:.85rem;font-weight:400;color:var(--muted);white-space:nowrap}
+.prog .b{color:var(--bad);font-weight:600}
+.secnote{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:var(--note);font-size:.9rem}
+h3.g{font-size:.92rem;color:var(--accent);margin:16px 0 2px;letter-spacing:.02em}
+h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
+.item{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.item .txt{min-width:0;overflow-wrap:anywhere}
+.item .hint,.pk .hint{display:block;color:var(--muted);font-size:.86rem}
+.btns{display:flex;gap:6px;align-self:start}
+.btns button{width:42px;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--muted);font-size:1.05rem;cursor:pointer}
+.item[data-s="1"] .ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.item[data-s="2"] .bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.item[data-s="1"] b{color:var(--muted);font-weight:500}
+.note{grid-column:1/-1;display:none;width:100%;font:inherit;font-size:.92rem;padding:6px 8px;border:1px solid var(--bad);border-radius:6px;background:var(--note);color:var(--fg)}
+.item[data-s="2"] .note{display:block}
+.no{display:none;color:var(--bad);font-weight:700;margin-right:6px}
+.item[data-s="2"] .no{display:inline}
+.pk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.pk input{width:20px;height:20px;margin:3px 0 0;flex:none;accent-color:var(--ok)}
+.pk input:checked+span b{color:var(--muted);text-decoration:line-through}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+.bar .in{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:center}
+#sum,#rsum{flex:1;font-size:.95rem}
+#sum b,#rsum b{color:var(--bad)}
+.bar button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer;white-space:nowrap}
+.bar button.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+#outt,#re-in,#re-outt{width:100%;font:inherit;font-size:.9rem;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.mode{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
+.mode button{font:inherit;font-size:.95rem;padding:6px 20px;border:0;background:var(--card);color:var(--muted);cursor:pointer}
+.mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+body[data-mode="re"] nav,body[data-mode="re"] .cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.row button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+.ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
+.rno{color:var(--bad);font-weight:700;margin-right:6px}
+#re-outp{margin-top:16px}
+footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
+@media print{nav,.bar,.cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>新成屋驗屋檢查表</h1>
+  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✗ 會出現備註欄。沒有的項目跳過即可。勾選只存在這台裝置的瀏覽器裡。</p>
+  <div class="mode" role="group" aria-label="模式"><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
+</header>
+<nav><div class="chips" id="nav"></div></nav>
+<main>
+  <section class="card" id="re">
+    <h2>複驗</h2>
+    <p class="sub">把第一次匯出的「驗屋缺失清單」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
+    <textarea id="re-in" rows="6" placeholder="貼上「驗屋缺失清單」全文" aria-label="貼上缺失清單"></textarea>
+    <div class="row">
+      <button type="button" id="re-load">載入</button>
+      <button type="button" id="re-local">帶入這支手機的初驗缺失</button>
+      <button type="button" id="re-clr">清除複驗</button>
+    </div>
+    <p class="sub" id="re-msg" aria-live="polite"></p>
+    <div id="re-list"></div>
+    <section id="re-outp" hidden>
+      <h2>複驗結果</h2>
+      <textarea id="re-outt" rows="14" readonly></textarea>
+      <p class="sub" id="re-outmsg"></p>
+    </section>
+  </section>
+
+  <section class="card cfg" aria-label="基本設定">
+    <label>臥室 <input type="number" min="1" max="6" data-c="bed"> 間</label>
+    <label>浴室 <input type="number" min="1" max="6" data-c="bath"> 間</label>
+    <label>陽台 <input type="number" min="1" max="6" data-c="balc"> 處</label>
+    <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
+    <label class="unit">戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
+  </section>
+
+  <details class="sec" id="sec-pack" open>
+    <summary><span class="t">帶去清單</span><span class="prog" id="pk-prog"></span></summary>
+    <div id="pack"></div>
+  </details>
+
+  <section class="card" id="sec-flow">
+    <h2>驗屋當天流程</h2>
+    <ol class="flow">
+      <li>白天去，光線比較好；時間預留半天。</li>
+      <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
+      <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。</li>
+      <li>從大門開始，一個空間一個空間照表走。</li>
+      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面各填不同的代號。</li>
+      <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
+      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+    </ol>
+  </section>
+
+  <div id="rooms"></div>
+
+  <section class="card" id="outp" hidden>
+    <h2>缺失清單</h2>
+    <textarea id="outt" rows="14" readonly></textarea>
+    <p class="sub" id="outmsg"></p>
+  </section>
+
+  <footer>自驗參考用，不能取代專業驗屋。法規數值以條文原文為準。建立日期：2026-11-04</footer>
+</main>
+
+<div class="bar"><div class="in">
+  <span id="sum" class="m1"></span>
+  <button type="button" class="pri m1" id="exp">匯出缺失清單</button>
+  <button type="button" class="m1" id="prt">列印</button>
+  <button type="button" class="m1" id="clr">清除</button>
+  <span id="rsum" class="m2"></span>
+  <button type="button" class="pri m2" id="re-exp">匯出複驗結果</button>
+</div></div>
+
+<script>
+const PACK=[
+ ['手上已有：電',[
+  ['插座測試器：HT-106B、ZOYI ZT-E4、插座檢測器（共 3 支）','110V 三孔插座：接線、電壓、漏電跳脫。兩個人各拿一支'],
+  ['阿楞驗電插頭（樹榮 SZ-9500）×2','測兩孔插座：兩燈全亮＝正常、只亮一燈＝火線與中性線接反、都不亮＝沒電（依賣家說明）。能不能插進 220V 插座看孔型，插不進去就用電表'],
+  ['三用電表 DER EE 1500','220V 插座（冷氣、IH 爐、電熱水器）：兩孔之間約 220V、各孔對地約 110V'],
+  ['網路測線儀（含 PoE）','測弱電箱到各房網路孔的導通與線序；不能尋線，沒標示的線怎麼對見「弱電箱」那節'],
+  ['網路線 5 m（具遮蔽）×1','房間網路孔接到測線儀子機用']]],
+ ['手上已有：量測與標記',[
+  ['驗屋錘 250 cm','拖地磚找空心，不用彎腰'],
+  ['驗屋錘 120 cm','敲壁磚、浴室牆面'],
+  ['雷射水平儀','地坪水平、牆面與門窗框垂直；機身附 15 cm 鋼尺、2.5 m 捲尺。鈕扣電池 ×3，出門前確認有電'],
+  ['捲尺：Tajima G3 5.5 m、3 m','對照平面圖尺寸；量窗台、欄杆高度'],
+  ['紙膠帶 20 mm ×7 捲（不同色）','標缺失位置與編號；兩個人各用一色，一看就知道是 A 還是 B 的'],
+  ['FUJIYA FTL-150-BG 鋁合金水平尺','門框、窗框、檯面、插座面板歪不歪，隨手量用'],
+  ['BOSCH GMS 120-27 牆體探測儀（選帶）','驗缺失用不太到；可以順便標出電視牆、吊櫃、層板預定位置的牆內管線與輕隔間骨架，拍照留存，日後鑽孔避開'],
+  ['手機內視鏡（Type-C、直徑 5.5 mm、線長 1 m、帶燈）','看地排、落水頭內有沒有水泥塊、砂石；維修孔裡看不到的角落。只看得到前 1 m；伸進有水的管子前，先確認鏡頭會不會進水']]],
+ ['還要準備：買或從家裡帶',[
+  ['強光手電筒＋備用電池','貼著牆斜照看油漆；照天花板維修孔'],
+  ['E27 燈泡 1–2 顆','測還沒裝燈具的空燈座'],
+  ['強力寬版膠帶','封住浴室地排做蓄水測試'],
+  ['彈珠 5–6 顆','看浴室、陽台的排水坡度'],
+  ['油性筆','在紙膠帶上寫編號'],
+  ['水桶或臉盆','排水測試'],
+  ['大抹布 2–3 條','水測試後擦乾；擦管線接頭查漏'],
+  ['衛生紙／廚房紙巾','馬桶沖水、抽風機吸力、擦管線接頭查漏'],
+  ['十字與一字螺絲起子','打開鎖螺絲的維修孔蓋'],
+  ['梯子（五呎梯）','爬上去看天花板維修孔：管線、抽風機風管、管道間、制水閥；可先問建商借'],
+  ['手機（充飽電）＋行動電源＋充電線','拍照存證、開這份表；有 USB 插座的話插手機試充電']]],
+ ['還要準備：看情況',[
+  ['4 分軟管（水管）','要做窗框淋水測試才需要：接水龍頭，對窗框淋水'],
+  ['第二條網路線（短的就好）','弱電箱那端如果是網路孔、不是水晶頭，主機那頭也要一條線才接得上；是水晶頭就直接插主機']]],
+ ['文件',[
+  ['買賣合約＋建材設備表','核對品牌、型號、規格'],
+  ['平面圖、水電配置圖','核對插座、開關、網路孔的位置與數量'],
+  ['保固內容','各項目的保固範圍與年限'],
+  ['客變圖／客變資料（有做客變才需要）','核對客變項目有沒有照做'],
+  ['變更增減帳表','核對加做、取消的項目'],
+  ['建物概況確認書','核對建物的基本資料'],
+  ['設備廠牌型號文件','熱水器、衛浴、廚具等設備的廠牌型號，現場對照設備上的銘牌']]]
+];
+
+const COMMON={
+ floor:['地坪',[
+  ['磁磚空心（膨共）','驗屋錘拖過整片地磚，聲音變「空空的」就貼膠帶標記；四角與邊緣最常見'],
+  ['磁磚破損、裂紋、缺角、色差','手電筒壓低角度照比較看得出來'],
+  ['磁磚高低差與填縫','手摸接縫不刮手；縫寬一致、填縫飽滿沒有孔洞'],
+  ['地坪平整','雷射水平儀打一條水平線到牆上，用捲尺量幾個點到地面的距離，差很多就是不平'],
+  ['木地板（若有）','整間走一遍，聽有沒有異音、踩下去會不會凹']]],
+ wall:['牆面',[
+  ['油漆','手電筒貼著牆斜照，看批土不平、刷痕、補土痕、髒污'],
+  ['裂縫、水漬、壁癌','窗戶下方、牆角、靠浴室的牆特別看'],
+  ['牆角與垂直','牆角線條直、沒有撞傷；雷射水平儀打垂直線，看牆面、門窗框跟線平不平行'],
+  ['踢腳板（若有）','貼合不翹、接縫整齊']]],
+ ceil:['天花板',[
+  ['平整、裂縫、水漬','靠近樓上浴室、廚房的位置特別看'],
+  ['灑水頭','沒被油漆噴到、沒有歪；不要去碰它'],
+  ['偵煙器／偵熱器','有裝，位置與圖說一致']]],
+ door:['門',[
+  ['開關順暢','不卡、不磨地；門縫上下左右均勻'],
+  ['門鎖、門把','上鎖、開鎖都順，鑰匙齊全；門把不鬆'],
+  ['門檔、門片','有門檔；門片沒有刮傷、脫皮']]],
+ win:['窗',[
+  ['開關與鎖扣','推拉順，鎖扣得到位'],
+  ['紗窗','完整沒破、好推、拆裝正常'],
+  ['玻璃與窗框','沒有刮傷破損；保護膜還沒撕的，請建商撕掉再驗'],
+  ['矽利康','窗框四周連續，沒有漏打或脫落'],
+  ['軌道排水','倒一點水到下軌，要往外排，不能積在軌道或流進室內'],
+  ['淋水測試（做得到時）','用軟管接水龍頭，對窗框外側淋水 30 分鐘，看室內窗框與牆角有沒有滲水'],
+  ['玻璃厚度與種類','對照建材表；自己量不了就請建商出示規格'],
+  ['窗台高度','量出來記在備註（法規門檻待確認）']]],
+ elec:['插座與開關',[
+  ['三孔插座（110V）','每個都插測試器看燈號與電壓；按 RCD 鍵測漏電跳脫（先確認配電箱在哪）。浴室、廚房、陽台的插座通常會跳，客廳臥室不跳不一定是缺失'],
+  ['兩孔插座','插阿楞驗電插頭：兩燈全亮＝正常、只亮一燈＝火線與中性線接反、都不亮＝沒電'],
+  ['開關與燈座','每個開關都對應得到燈；空燈座插 E27 燈泡試'],
+  ['位置與數量','插座、開關、網路孔、電視孔對照水電圖'],
+  ['面板','平整不歪、沒破、沒沾到油漆']]],
+ ac:['冷氣',[
+  ['冷氣插座（220V）','用電表量：兩孔之間約 220V、各孔對地約 110V'],
+  ['預留孔與管線','位置合理、有封住；有預留冷媒管或排水管的話，位置與圖說一致。室內和室外機那頭的冷媒套管開口都要看'],
+  ['排水管','倒一杯水進去，確認會流到室外或排水處；室外機那頭的排水也看']]]
+};
+const ROOMCOMMON=['floor','wall','ceil','door','win','elec','ac'];
+
+const DEF={
+ living:{t:'客廳（含玄關）',common:ROOMCOMMON,spec:[
+  ['大門',[
+   ['開關與自動關閉','門弓器會把門關到底，也不會甩太大力'],
+   ['大門鎖','電子鎖的每種開法（密碼、卡片、鑰匙）都試；反鎖'],
+   ['貓眼、門縫、門檻','貓眼看得清楚；門縫均勻；門檻平整']]],
+  ['設備',[
+   ['對講機','和警衛室、大門口互通；遙控開門；有影像的看畫面'],
+   ['電視牆','插座、網路孔、電視孔的數量與位置；有預埋管的話看位置'],
+   ['落地窗','軌道順、鎖、紗門；門檻排水孔沒堵'],
+   ['玄關','鞋櫃（若有附）門片與層板；感應燈（若有）']]]]},
+ bed:{t:'臥室',common:ROOMCOMMON,spec:[
+  ['臥室專屬',[
+   ['房門鎖','鎖上後，從外面可以用緊急開鎖孔打開'],
+   ['床頭插座與開關','位置與圖說一致'],
+   ['衣櫃（若有附）','門片、抽屜、層板、吊桿都穩固；門片對齊']]]]},
+ kitchen:{t:'廚房',common:['floor','wall','ceil','win','elec'],spec:[
+  ['台面與水槽',[
+   ['流理台台面','刮傷、裂痕、接縫；靠牆的矽利康連續'],
+   ['水槽放水測試','塞住放滿水，放幾分鐘看下櫃有沒有滲，再放掉看排水速度'],
+   ['下櫃管線','用衛生紙擦冷熱水管與排水管接頭，紙濕了就是漏'],
+   ['水龍頭','冷熱水、出水量；抽拉頭（若有）']]],
+  ['設備',[
+   ['排油煙機','每段風速都開、聽聲音；衛生紙靠近看吸力；燈'],
+   ['爐具','瓦斯爐點火（瓦斯沒開通就留到複驗）；IH 爐是 220V，確認有插座或專用迴路'],
+   ['電器櫃與冰箱插座','位置與數量；電鍋、微波爐、烤箱的插座夠不夠'],
+   ['瓦斯管與瓦斯偵測器（若有）','管線有固定；偵測器有裝'],
+   ['淨水器（若有附）','會出水，接頭不漏'],
+   ['洗碗機／烘碗機（若有附）','每個功能都開；給排水接頭不漏']]],
+  ['櫃體',[
+   ['櫃門、抽屜','開關順、鉸鏈不鬆、緩衝有作用、門片對齊'],
+   ['壁磚','驗屋錘敲過；壁磚和台面交接處的矽利康']]]]},
+ bath:{t:'浴室',common:['door','win','elec'],spec:[
+  ['地面與牆',[
+   ['排水坡度','倒一桶水或放彈珠：要流向排水孔，不能積水、不能往門口流'],
+   ['地磚與壁磚空心','浴室底下有防水層，空心要特別注意；壁磚整面都敲'],
+   ['門口擋水','有門檻或止水墩，淋浴的水不會流到門外'],
+   ['蓄水測試（防水層）','用寬版膠帶封住地排，放一層水（低於門檻）靜置，驗完其他地方再回來看：水位有沒有降、隔壁牆面和門外地面有沒有濕。看完撕掉膠帶放水']]],
+  ['衛浴設備',[
+   ['馬桶','大小號都沖；丟幾張衛生紙沖看看；坐上去晃不能動；底座矽利康；沖完水箱會停水'],
+   ['洗手台','放水測試；下方接頭用衛生紙擦；龍頭冷熱；台面穩固'],
+   ['淋浴','冷熱水、水壓；蓮蓬頭、升降桿；熱水要熱水器能用才測得到'],
+   ['淋浴門／拉門','開關順、止水條完整，沖澡的水不會噴到乾區'],
+   ['浴缸（若有）','放水、排水；四周矽利康'],
+   ['地排','蓋子完整、排水快、有防臭；打開蓋子用內視鏡看管內有沒有水泥塊、砂石'],
+   ['抽風機／暖風機','每個功能都開；衛生紙貼近看吸力'],
+   ['鏡子、鏡櫃、毛巾架','穩固、沒刮傷']]],
+  ['天花板',[
+   ['維修孔','打開用手電筒看裡面，管線接頭有沒有滴水或水漬（樓上浴室漏水會在這裡看到）；頭伸不進去的角落用內視鏡'],
+   ['天花板板材','平整、沒有水漬或變形'],
+   ['抽風機風管','從維修孔看風管有接好、沒脫落；是排到戶外或接進管道間，不是排在天花板裡'],
+   ['天花板內管線','電線有穿保護管；管道間的開口有封好'],
+   ['制水閥','找出位置（可能在天花板內），確認關得起來']]]]},
+ balc:{t:'陽台',common:['elec'],spec:[
+  ['排水',[
+   ['排水坡度','倒水看會流向落水頭，不能積水、不能往室內流'],
+   ['落水頭（排水孔）','通不通、有沒有被水泥砂堵住；內視鏡伸進去看管內'],
+   ['落地門門檻','室內地面比陽台高；門檻下方排水孔沒堵'],
+   ['溢水孔（若有設計）','沒被堵住；落水頭堵住時，水會從這裡排出去，不會倒灌進室內']]],
+  ['欄杆與外牆',[
+   ['欄杆穩固','用力推看穩不穩；焊點、鏽蝕；玻璃欄杆有沒有裂'],
+   ['欄杆高度與縫隙','高度下限 1.1 m（十層以上更高）；鏤空不能讓直徑 10 cm 的東西穿過，也不能有好攀爬的水平橫條。以建築技術規則設計施工編第 38 條原文為準'],
+   ['地磚與外牆磚','驗屋錘敲手搆得到的範圍']]],
+  ['設備',[
+   ['洗衣機位置','給水龍頭、專用排水口、插座都有，空間放得下洗衣機；排水口倒水試通不通'],
+   ['熱水器','電熱水器確認 220V 迴路；瓦斯熱水器確認通風與排氣管；能用就試出熱水'],
+   ['冷氣室外機','擺放位置、支架、預留管線'],
+   ['曬衣架（若有）','升降順、固定牢'],
+   ['燈具','開關對應得到、會亮'],
+   ['洗衣槽（若有）','放水測試；下方接頭用衛生紙擦']]]]},
+ panel:{t:'配電箱',note:'內蓋不要自己拆；要看內部，請建商的水電在場。',spec:[
+  ['先看',[
+   ['迴路標示','每個開關都有標示（例如「客廳插座」「主臥冷氣」），字清楚'],
+   ['外觀','沒有焦黑、異味、異音；箱門開關正常、箱體固定'],
+   ['規格對照','迴路數、總開關容量和水電圖／合約一致；冷氣、IH 爐、電熱水器有沒有專用迴路']]],
+  ['實測',[
+   ['標示對不對','一次關一個迴路，拿插座測試器去看對應的插座有沒有斷電、燈有沒有熄；全部測完再推回去'],
+   ['漏電斷路器','按斷路器上的測試鈕，應該立刻跳脫，再推回']]]]},
+ lan:{t:'弱電箱',spec:[
+  ['弱電箱',[
+   ['標示','每條網路線、電視線、電話線都標示對應哪個房間'],
+   ['網路線逐條測','測線儀主機接弱電箱這端、子機接房間網路孔，1–8 燈依序亮才是全通、線序正確。線沒標示的話：子機插在某間房的孔，主機在弱電箱一條一條試，燈會亮的那條就是那間'],
+   ['線材規格','線皮印字（Cat5e／Cat6）和建材表一致'],
+   ['電源插座','箱內或旁邊有插座，給數據機、路由器用'],
+   ['光纖','有沒有預留光纖或光纖插座（看建材表）'],
+   ['空間','放得下數據機和路由器（或小 Switch）']]]]}
+};
+
+const KEY='yanwu-checklist-v1';
+const fresh=()=>({v:{},n:{},p:{},c:{bed:3,bath:2,balc:1},unit:'',code:'',num:{},seq:0,mode:'first',r:{items:[],v:{},n:{},unit:''}});
+let S=fresh();
+try{const o=JSON.parse(localStorage.getItem(KEY));if(o)S=Object.assign(fresh(),o,{c:Object.assign(fresh().c,o.c||{})});}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+for(const k in S.v)if(S.v[k]===2&&!S.num[k])S.num[k]=++S.seq;
+const tag=k=>S.code.trim()+S.num[k];
+const $=s=>document.querySelector(s);
+
+function sections(){
+  const L=[];
+  const add=(id,d,t)=>L.push({id,t:t||d.t,note:d.note,groups:[
+    ...(d.spec||[]).map(g=>[g[0],g[1],g[0],false]),
+    ...(d.common||[]).map(k=>[COMMON[k][0],COMMON[k][1],'c-'+k,true])]});
+  const multi=(key,n)=>{for(let i=1;i<=n;i++)add(key+i,DEF[key],n>1?DEF[key].t+' '+i:DEF[key].t)};
+  add('living',DEF.living);
+  multi('bed',S.c.bed);
+  add('kitchen',DEF.kitchen);
+  multi('bath',S.c.bath);
+  multi('balc',S.c.balc);
+  add('panel',DEF.panel);
+  add('lan',DEF.lan);
+  return L;
+}
+const k3=(sid,gk,i)=>sid+'|'+gk+'|'+i;
+
+function render(){
+  $('#pack').innerHTML=PACK.map(([g,items])=>`<h3 class="g">${g}</h3>`+items.map(([t,h],i)=>
+    `<label class="pk"><input type="checkbox" data-p="${g}|${i}"><span><b>${t}</b><span class="hint">${h}</span></span></label>`).join('')).join('');
+  document.querySelectorAll('[data-p]').forEach(x=>x.checked=!!S.p[x.dataset.p]);
+  const secs=sections();
+  $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}" open><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span></summary>`+
+    (s.note?`<p class="secnote">${s.note}</p>`:'')+
+    s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h],i)=>
+      `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"></div>`).join('')).join('')+
+    `</details>`).join('');
+  document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
+  $('#nav').innerHTML=`<a href="#sec-pack">帶去清單</a><a href="#sec-flow">流程</a>`+secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
+  document.querySelectorAll('[data-c]').forEach(x=>x.value=S.c[x.dataset.c]);
+  $('#unit').value=S.unit;
+  $('#code').value=S.code;
+  update();
+}
+function setState(it,s){
+  it.dataset.s=s;
+  it.querySelector('.no').textContent=s===2?tag(it.dataset.k):'';
+  it.querySelector('.ok').setAttribute('aria-pressed',s===1);
+  it.querySelector('.bad').setAttribute('aria-pressed',s===2);
+}
+function update(){
+  let bad=0;
+  for(const s of sections()){
+    let n=0,done=0,b=0;
+    s.groups.forEach(([,items,gk])=>items.forEach((_,i)=>{n++;const v=S.v[k3(s.id,gk,i)];if(v)done++;if(v===2)b++}));
+    bad+=b;
+    const p=document.querySelector(`[data-prog="${s.id}"]`);
+    if(p)p.innerHTML=`${done}/${n}`+(b?` · <span class="b">缺失 ${b}</span>`:'');
+    const nv=document.querySelector(`[data-navn="${s.id}"]`);
+    if(nv)nv.textContent=b?b:'';
+  }
+  const pk=document.querySelectorAll('[data-p]'),pc=[...pk].filter(x=>x.checked).length;
+  $('#pk-prog').textContent=`已備 ${pc}/${pk.length}`;
+  $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`;
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.ok,.bad');if(!b)return;
+  const it=b.closest('.item'),want=b.classList.contains('ok')?1:2;
+  if(it.dataset.r!==undefined){const i=it.dataset.r,s=S.r.v[i]===want?0:want;if(s)S.r.v[i]=s;else delete S.r.v[i];setR(it,s);save();updRe();return;}
+  const k=it.dataset.k,s=S.v[k]===want?0:want;
+  if(s)S.v[k]=s;else delete S.v[k];
+  if(s===2)S.num[k]=++S.seq;
+  else if(S.num[k]){if(S.num[k]===S.seq)S.seq--;delete S.num[k];}
+  setState(it,s);save();update();
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList.contains('note')){const it=t.closest('.item'),R=it.dataset.r!==undefined,o=R?S.r.n:S.n,k=R?it.dataset.r:it.dataset.k;if(t.value)o[k]=t.value;else delete o[k];save();}
+  else if(t.id==='unit'){S.unit=t.value;save();}
+  else if(t.id==='code'){S.code=t.value;save();document.querySelectorAll('#rooms .item').forEach(it=>setState(it,S.v[it.dataset.k]||0));}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.p){if(t.checked)S.p[t.dataset.p]=1;else delete S.p[t.dataset.p];save();update();}
+  else if(t.dataset.c){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c[t.dataset.c]=v;save();render();}
+});
+
+function defectText(){
+  const d=new Date();let n=0,body='';
+  for(const s of sections()){
+    let part='';
+    s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
+    if(part)body+=`【${s.t}】\n${part}\n`;
+  }
+  return `驗屋缺失清單\n戶別：${S.unit||'（未填）'}\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
+}
+function copyOut(ta,msg){
+  const box=ta.closest('section');box.hidden=false;box.scrollIntoView({behavior:'smooth'});
+  msg.textContent='清單在上面，可以手動複製。';
+  const done=()=>msg.textContent='已複製，可以直接貼到 LINE 或 Email。';
+  const fallback=()=>{ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)done();else msg.textContent='沒辦法自動複製，文字已經選取，請手動複製。'};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
+}
+$('#exp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
+
+// 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function parseList(txt){
+  const items=[];let room='',unit='';
+  for(const raw of String(txt).split(/\r?\n/)){
+    const l=raw.trim();let m;
+    if((m=l.match(/^戶別：(.+)$/))){if(!unit&&m[1]!=='（未填）')unit=m[1];}
+    else if((m=l.match(/^【(.+)】$/)))room=m[1];
+    else if((m=l.match(/^([^\s.]{0,3}?\d+)\.\s+(.+)$/)))items.push({no:m[1],room,text:m[2]});
+  }
+  return {items,unit};
+}
+function loadRe(txt){
+  const {items,unit}=parseList(txt),msg=$('#re-msg');
+  if(!items.length){msg.textContent='沒找到缺失項目：請貼上「匯出缺失清單」產生的文字。';return;}
+  if(Object.keys(S.r.v).length+Object.keys(S.r.n).length&&!confirm('載入後會取代目前的複驗紀錄，確定嗎？'))return;
+  S.r={items,v:{},n:{},unit:unit||S.unit};save();$('#re-outp').hidden=true;renderRe();
+  msg.textContent=`已載入 ${items.length} 項。`;
+}
+function setR(it,s){
+  it.dataset.s=s;
+  it.querySelector('.ok').setAttribute('aria-pressed',s===1);
+  it.querySelector('.bad').setAttribute('aria-pressed',s===2);
+}
+function renderRe(){
+  const G=new Map();
+  S.r.items.forEach((x,i)=>{if(!G.has(x.room))G.set(x.room,[]);G.get(x.room).push(i)});
+  $('#re-list').innerHTML=[...G].map(([room,ix])=>`<h3 class="g">${esc(room||'未分空間')}</h3>`+ix.map(i=>{const x=S.r.items[i];
+    return `<div class="item ritem" data-r="${i}"><div class="txt"><b><span class="rno">${esc(x.no)}</span>${esc(x.text)}</b></div><div class="btns"><button type="button" class="ok" aria-pressed="false">已修</button><button type="button" class="bad" aria-pressed="false">未修</button></div><input class="note" type="text" placeholder="複驗備註：還剩什麼問題" aria-label="複驗備註"></div>`}).join('')).join('');
+  document.querySelectorAll('.ritem').forEach(it=>{const i=it.dataset.r;setR(it,S.r.v[i]||0);it.querySelector('.note').value=S.r.n[i]||''});
+  updRe();
+}
+function updRe(){
+  const n=S.r.items.length,c=[0,0,0];
+  for(let i=0;i<n;i++)c[S.r.v[i]||0]++;
+  $('#rsum').innerHTML=n?`已修 ${c[1]} · <b>未修 ${c[2]}</b> · 未查 ${c[0]}`:'尚未載入清單';
+}
+function reText(){
+  const d=new Date(),G={0:[],1:[],2:[]};
+  S.r.items.forEach((x,i)=>{const s=S.r.v[i]||0;G[s].push(`${x.no}. ${x.room?x.room+'｜':''}${x.text}${s===2&&S.r.n[i]?' → 複驗：'+S.r.n[i]:''}`)});
+  const sec=(t,a)=>a.length?`【${t}】\n${a.join('\n')}\n\n`:'';
+  return `驗屋複驗結果\n戶別：${S.r.unit||S.unit||'（未填）'}\n複驗日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
+}
+$('#re-load').onclick=()=>loadRe($('#re-in').value);
+$('#re-local').onclick=()=>loadRe(defectText());
+$('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失清單。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
+$('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受影響。')){S.r=fresh().r;save();$('#re-in').value='';$('#re-outp').hidden=true;$('#re-msg').textContent='';renderRe();}};
+function setMode(m){S.mode=m;document.body.dataset.mode=m;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
+document.querySelector('.mode').onclick=e=>{const b=e.target.closest('button');if(b){setMode(b.dataset.m);save();window.scrollTo(0,0);}};
+$('#prt').onclick=()=>window.print();
+window.addEventListener('beforeprint',()=>document.querySelectorAll('details').forEach(d=>d.open=true));
+$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？帶去清單、間數、戶別、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+
+render();
+renderRe();
+setMode(S.mode==='re'?'re':'first');
+</script>
+</body>
+</html>
