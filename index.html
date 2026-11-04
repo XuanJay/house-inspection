@@ -36,8 +36,11 @@ nav a .n{color:var(--bad);margin-left:4px;font-weight:600}
 .cfgnote{margin:12px 0 0;padding-left:1.2em}
 .cfgnote li{margin:4px 0}
 .cfg label{display:flex;align-items:center;gap:6px}
-.cfg input{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
-.cfg input[type=number],.cfg #code{width:3.4em}
+.cfg input,.fl input{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.cfg input[type=number],.cfg #code,.fl input{width:3.4em}
+.fl{display:grid;grid-template-columns:2.2em 1fr 1fr;gap:6px 12px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:.95rem}
+.fl b{grid-row:span 2}
+.fl label{display:flex;align-items:center;gap:4px}
 .cfg .unit{flex:1 1 220px}
 .cfg .unit input{flex:1;min-width:0}
 ol.flow{margin:0;padding-left:1.4em}
@@ -90,7 +93,11 @@ body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就�
 .mode{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:12px}
 .mode button{font:inherit;font-size:.95rem;padding:6px 20px;border:0;background:var(--card);color:var(--muted);cursor:pointer}
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
+/* 三個分頁：guide＝操作須知（流程＋攜帶工具）、first＝初驗、re＝複驗 */
+body:not([data-mode="first"]) nav,body:not([data-mode="first"]) #sec-cfg,body:not([data-mode="first"]) #rooms,body:not([data-mode="first"]) #outp,body:not([data-mode="first"]) .m1,
+body:not([data-mode="guide"]) #sec-pack,body:not([data-mode="guide"]) #sec-flow,
+body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="guide"] .bar{display:none!important}
+#sec-flow>.sub{margin:10px 0 6px}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 #sec-cfg{--c:var(--c1)}#sec-pack{--c:var(--c2)}#sec-flow{--c:var(--c3)}#outp{--c:var(--c4)}
 #sec-cfg,#sec-pack,#sec-flow,#outp{border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
@@ -101,7 +108,8 @@ body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec
 .sty select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
 .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .hd h2{margin:0}
-.row button,.hd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+#gd{margin-top:8px}
+.row button,.hd button,#gd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 .ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
@@ -116,8 +124,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <option value="">經典藍</option><option value="forest">森林綠</option><option value="sunset">暖陽橘</option>
       <option value="ocean">海洋青</option><option value="berry">莓果紫</option><option value="ink">墨灰</option>
     </select></label></div>
-  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✓ 或 ✗ 會出現拍照鈕，按 ✗ 還會出現備註欄。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
-  <div class="mode" role="group" aria-label="模式"><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
+  <div class="mode" role="group" aria-label="模式"><button type="button" data-m="guide" aria-pressed="false">操作須知</button><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
 </header>
 <nav><div class="chips" id="nav"></div><div class="tot"><span id="tot-t"></span><span class="pbar" id="tot-bar" role="progressbar" aria-label="總進度" aria-valuemin="0"></span></div></nav>
 <main>
@@ -141,35 +148,35 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <details class="sec" id="sec-cfg">
     <summary><span class="t">基本設定</span><span class="prog" id="cfg-sum"></span></summary>
     <div class="cfg">
-      <label>臥室 <input type="number" min="1" max="6" data-c="bed"> 間</label>
-      <label>浴室 <input type="number" min="1" max="6" data-c="bath"> 間</label>
-      <label>陽台 <input type="number" min="1" max="6" data-c="balc"> 處</label>
+      <label>樓層 <input type="number" min="1" max="6" data-fl> 層</label>
       <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
       <label class="unit" hidden>戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
     </div>
+    <div id="floors"></div>
     <ul class="sub cfgnote">
-      <li><b>臥室、浴室、陽台</b>：照實際格局填，下面就會列出對應數量的檢查區塊，例如 3 房 2 衛 1 陽台。</li>
+      <li><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。</li>
       <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號。一個人驗可以不填。</li>
       <li hidden><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
     </ul>
   </details>
 
-  <details class="sec" id="sec-pack">
-    <summary><span class="t">建議攜帶工具清單</span><span class="prog" id="pk-prog"></span></summary>
-    <div id="pack"></div>
-  </details>
-
   <details class="sec" id="sec-flow">
     <summary><span class="t">驗屋當日流程</span></summary>
+    <p class="sub">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✓ 或 ✗ 會出現拍照鈕，按 ✗ 還會出現備註欄。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
     <ol class="flow">
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
-      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面的「基本設定」各填不同的代號。</li>
+      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在「初驗」分頁最上面的「基本設定」各填不同的代號。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
       <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目右上角的「分享照片」，傳到 LINE 或存到相簿；照片只存在這支手機，當天就要分享。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
+  </details>
+
+  <details class="sec" id="sec-pack">
+    <summary><span class="t">建議攜帶工具清單</span><span class="prog" id="pk-prog"></span></summary>
+    <div id="pack"></div>
   </details>
 
   <div id="rooms"></div>
@@ -179,6 +186,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <div class="hd"><h2>缺失項目</h2><span><button type="button" id="shp" hidden>分享照片</button><button type="button" id="cp">複製</button></span></div>
     <textarea id="outt" rows="14" readonly></textarea>
     <p class="sub" id="outmsg"></p>
+    <div id="gd" hidden><button type="button" id="gup">存到 Google 雲端硬碟</button><p class="sub" id="gto"></p><p class="sub" id="gmsg" aria-live="polite"></p></div>
   </section>
 
   <footer>自驗參考用，不能取代專業驗屋。法規數值以條文原文為準。建立日期：2026-11-04</footer>
@@ -375,13 +383,33 @@ const DEF={
    ['電源插座','箱內或旁邊有插座，給數據機、路由器用'],
    ['光纖','有沒有預留光纖或光纖插座（看建材表）'],
    ['空間','放得下數據機和路由器（或小 Switch）'],
-   ['箱蓋接地','金屬箱蓋和箱體之間有接一條地線']]]]}
+   ['箱蓋接地','金屬箱蓋和箱體之間有接一條地線']]]]},
+ stairs:{t:'樓梯',common:['wall','ceil'],spec:[
+  ['樓梯',[
+   ['踏階','每一階的高度、深度看起來一致，踩起來不晃；驗屋錘敲找空心；止滑條或止滑處理完整'],
+   ['扶手','用力推、拉都穩固；轉角和接頭不刮手'],
+   ['樓梯燈','上、下兩端都能開關同一盞燈'],
+   ['收邊','踏階和牆面交接處的踢腳板、矽利康完整，沒有裂縫']]]]},
+ roof:{t:'屋頂平台',common:['elec'],spec:[
+  ['排水與防水',[
+   ['洩水坡度','倒水看會流向落水頭，不能積水（標準：至少 1/100）'],
+   ['落水頭','有罩子、固定牢；沒被水泥砂或雜物堵住，內視鏡伸進去看管內'],
+   ['泛水','地面和女兒牆交接處有往上收的防水（泛水），沒有裂縫'],
+   ['穿出管線','凸出屋頂地面的管線四周有做防水']]],
+  ['女兒牆與設備',[
+   ['女兒牆、欄杆高度','2 層樓以下至少 1.0 m、3 層以上 1.1 m、10 層以上 1.2 m（驗屋公司標準轉述建築技術規則，以原文為準）'],
+   ['欄杆、扶手','用力推不晃；焊點、鏽蝕'],
+   ['地面','沒有破損、凹陷、積水；驗屋錘敲找空心'],
+   ['水塔（若有）','固定牢靠、蓋子蓋好；底部和接管沒有滲漏']]]]}
 };
+DEF.lounge={t:'客廳',common:ROOMCOMMON,spec:[['設備',DEF.living.spec[1][1].filter(x=>['電視牆','落地窗'].includes(x[0]))]]};
 
 const KEY='yanwu-checklist-v1';
-const fresh=()=>({v:{},n:{},p:{},c:{bed:3,bath:2,balc:1},unit:'',code:'',num:{},seq:0,mode:'first',r:{items:[],v:{},n:{},unit:''}});
+// c.n＝樓層數；c.f[k]＝第 k+1 層的 {liv 客廳, bed 臥室, bath 浴室, balc 陽台}（f 可比 n 長，減層再加回來時數量還在）
+const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:'',code:'',num:{},seq:0,mode:'first',r:{items:[],v:{},n:{},unit:''}});
 let S=fresh();
-try{const o=JSON.parse(localStorage.getItem(KEY));if(o)S=Object.assign(fresh(),o,{c:Object.assign(fresh().c,o.c||{})});}catch(e){}
+try{const o=JSON.parse(localStorage.getItem(KEY));if(o){S=Object.assign(fresh(),o);
+  const c=o.c||{};S.c=c.f?c:{n:1,f:[{liv:1,bed:c.bed||3,bath:c.bath||2,balc:c.balc||1}]};}}catch(e){}   // 舊格式 {bed,bath,balc} → 1 層
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 for(const k in S.v)if(S.v[k]===2&&!S.num[k])S.num[k]=++S.seq;
 const tag=k=>S.code.trim()+S.num[k];
@@ -392,12 +420,18 @@ function sections(){
   const add=(id,d,t)=>L.push({id,t:t||d.t,note:d.note,groups:[
     ...(d.spec||[]).map(g=>[g[0],g[1],g[0],false]),
     ...(d.common||[]).map(k=>[COMMON[k][0],COMMON[k][1],'c-'+k,true])]});
-  const multi=(key,n)=>{for(let i=1;i<=n;i++)add(key+i,DEF[key],n>1?DEF[key].t+' '+i:DEF[key].t)};
-  add('living',DEF.living);
-  multi('bed',S.c.bed);
-  add('kitchen',DEF.kitchen);
-  multi('bath',S.c.bath);
-  multi('balc',S.c.balc);
+  const many=S.c.n>1;
+  // 1F 沿用原本的 id（living、bed1、bath1…）讓舊勾選對得上；2F 起加前綴 f2-；兩層以上標題前加「1F 」等
+  for(let k=1;k<=S.c.n;k++){
+    const f=S.c.f[k-1],pre=many?k+'F ':'',fid=k>1?`f${k}-`:'';
+    const multi=(key,n,d=DEF[key])=>{for(let i=1;i<=n;i++)add(fid+key+i,d,pre+d.t+(n>1?' '+i:''))};
+    for(let i=1;i<=f.liv;i++){if(k===1&&i===1)add('living',DEF.living,pre+DEF.living.t);else add(`f${k}-liv${i}`,DEF.lounge,pre+DEF.lounge.t+(f.liv>1?' '+i:''));}
+    multi('bed',f.bed);
+    if(k===1)add('kitchen',DEF.kitchen);
+    multi('bath',f.bath);
+    multi('balc',f.balc);
+  }
+  if(many){add('stairs',DEF.stairs);add('roof',DEF.roof);}
   add('panel',DEF.panel);
   add('lan',DEF.lan);
   return L;
@@ -417,8 +451,11 @@ function render(){
     `</details>`).join('');
   document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
   paintPh();
-  $('#nav').innerHTML=`<a href="#sec-pack">建議攜帶工具清單</a><a href="#sec-flow">流程</a>`+secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
-  document.querySelectorAll('[data-c]').forEach(x=>x.value=S.c[x.dataset.c]);
+  $('#nav').innerHTML=secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
+  $('[data-fl]').value=S.c.n;
+  // 只在層數變了才重建（改某層數量時不能拿掉正在輸入的那格，否則 blur 會再觸發 change、重入 render）
+  if($('#floors').children.length!==S.c.n)$('#floors').innerHTML=S.c.f.slice(0,S.c.n).map((f,k)=>`<div class="fl"><b>${k+1}F</b>`+
+    [['liv','客廳',3],['bed','臥室',6],['bath','浴室',6],['balc','陽台',6]].map(([r,t,mx])=>`<label>${t} <input type="number" min="0" max="${mx}" data-f="${k}" data-rm="${r}" value="${f[r]}"></label>`).join('')+'</div>').join('');
   $('#unit').value=S.unit;
   $('#code').value=S.code;
   update();
@@ -450,7 +487,8 @@ function update(){
   $('#pk-prog').textContent=`已備 ${pc}/${pk.length}`;
   $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`;
   $('#tot-t').textContent=`總進度 ${D}/${N} · ${Math.round(D/N*100)}%`;
-  $('#cfg-sum').textContent=`${S.c.bed} 臥 · ${S.c.bath} 衛 · ${S.c.balc} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
+  const fs=S.c.f.slice(0,S.c.n),sum=r=>fs.reduce((a,f)=>a+f[r],0);
+  $('#cfg-sum').textContent=(S.c.n>1?`${S.c.n} 層 · `:'')+`${sum('bed')} 臥 · ${sum('bath')} 衛 · ${sum('balc')} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
   fill($('#tot-bar'),D,bad,N);
   updShp();
 }
@@ -474,11 +512,12 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset.p){if(t.checked)S.p[t.dataset.p]=1;else delete S.p[t.dataset.p];save();update();}
-  else if(t.dataset.c){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c[t.dataset.c]=v;save();render();}
+  else if(t.dataset.fl!==undefined){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c.n=v;while(S.c.f.length<v)S.c.f.push({liv:0,bed:2,bath:1,balc:1});save();render();}
+  else if(t.dataset.rm){const mx=+t.max,v=Math.max(0,Math.min(mx,parseInt(t.value,10)||0));S.c.f[+t.dataset.f][t.dataset.rm]=v;t.value=v;save();render();}
 });
 
-function defectText(){
-  const d=new Date();let n=0,body='';
+function defectText(d=new Date()){
+  let n=0,body='';
   for(const s of sections()){
     let part='';
     s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
@@ -542,6 +581,56 @@ $('#shp').onclick=()=>{
   $('#outmsg').textContent=`這個瀏覽器不能直接分享，已下載 ${files.length} 張照片。`;
 };
 
+// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」，放初驗結果 .txt＋照片。
+// 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡選的資料夾）；資料夾 ID 只存在這台裝置，不寫進公開網頁。
+const GCFG={client:'',key:'',app:''};   // ← Google Cloud：OAuth 用戶端 ID、API 金鑰（限 Picker API＋限本站網址）、專案編號
+let gtok=null,gexp=0;
+const gFolder=()=>{try{return JSON.parse(localStorage.getItem('yanwu-gfolder'))}catch(e){return null}};
+function gShowTo(){const f=gFolder();$('#gto').innerHTML=f?`存到：${esc(f.name)}　<a href="#" id="gchg">換資料夾</a>`:'第一次上傳會請你登入 Google，並選要存放的資料夾。';}
+function gInit(){
+  if(!GCFG.client)return;
+  $('#gd').hidden=false;gShowTo();
+  for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
+}
+$('#gto').addEventListener('click',e=>{if(e.target.id==='gchg'){e.preventDefault();try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}});
+function gToken(){return new Promise((ok,ng)=>{
+  if(gtok&&Date.now()<gexp)return ok(gtok);
+  google.accounts.oauth2.initTokenClient({client_id:GCFG.client,scope:'https://www.googleapis.com/auth/drive.file',
+    callback:r=>{if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
+    error_callback:e=>ng(e&&e.type||'popup')}).requestAccessToken();});}
+function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',()=>{
+  const P=google.picker,v=new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true);
+  new P.PickerBuilder().addView(v).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle('選擇要存放的資料夾')
+    .setCallback(d=>{if(d.action===P.Action.PICKED){const f={id:d.docs[0].id,name:d.docs[0].name};try{localStorage.setItem('yanwu-gfolder',JSON.stringify(f))}catch(e){}gShowTo();ok(f)}
+      else if(d.action===P.Action.CANCEL)ng('cancel')}).build().setVisible(true);}));}
+async function gApi(url,opt,tok){
+  const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+tok},opt.headers||{})}));
+  if(!r.ok)throw r.status;return r.json();}
+$('#gup').onclick=async()=>{
+  const m=$('#gmsg'),b=$('#gup');
+  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
+  b.disabled=true;
+  try{
+    const tok=await gToken(),par=gFolder()||await gPick(tok),d=new Date(),txt=defectText(d),code=S.code.trim();
+    const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} 初驗${code?' '+code:''}`;
+    m.textContent='建立資料夾…';
+    const f=await gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[par.id]})},tok);
+    const files=[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()];
+    for(let i=0;i<files.length;i++){
+      m.textContent=`上傳中 ${i+1}/${files.length}…`;
+      const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:files[i].name,parents:[f.id]})],{type:'application/json'}));fd.append('file',files[i]);
+      await gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);
+    }
+    $('#outt').value=txt;
+    m.innerHTML=`已存到「${esc(par.name)}／${esc(name)}」，共 ${files.length} 個檔案。<a href="${esc(f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
+  }catch(e){
+    if(e===401)gtok=null;
+    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}
+    m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
+  }finally{b.disabled=false;}
+};
+
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function parseList(txt){
@@ -601,7 +690,8 @@ $('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗
 
 render();
 renderRe();
-setMode(S.mode==='re'?'re':'first');
+gInit();
+setMode(['guide','re'].includes(S.mode)?S.mode:'first');
 </script>
 </body>
 </html>
