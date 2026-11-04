@@ -10,6 +10,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}}
 :root[data-theme="dark"]{--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;padding-bottom:84px}
 main{max-width:760px;margin:0 auto;padding:0 16px}
@@ -118,12 +119,12 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <label>浴室 <input type="number" min="1" max="6" data-c="bath"> 間</label>
       <label>陽台 <input type="number" min="1" max="6" data-c="balc"> 處</label>
       <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
-      <label class="unit">戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
+      <label class="unit" hidden>戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
     </div>
     <ul class="sub cfgnote">
       <li><b>臥室、浴室、陽台</b>：照實際格局填，下面就會列出對應數量的檢查區塊，例如 3 房 2 衛 1 陽台。</li>
       <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號。一個人驗可以不填。</li>
-      <li><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
+      <li hidden><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
     </ul>
   </details>
 
@@ -454,7 +455,7 @@ function defectText(){
     s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
     if(part)body+=`【${s.t}】\n${part}\n`;
   }
-  return `驗屋缺失清單\n戶別：${S.unit||'（未填）'}\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
+  return `驗屋缺失清單\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
 }
 function copyOut(ta,msg){
   const box=ta.closest('section');box.hidden=false;box.scrollIntoView({behavior:'smooth'});
@@ -481,7 +482,7 @@ function loadRe(txt){
   const {items,unit}=parseList(txt),msg=$('#re-msg');
   if(!items.length){msg.textContent='沒找到缺失項目：請貼上「匯出缺失清單」產生的文字。';return;}
   if(Object.keys(S.r.v).length+Object.keys(S.r.n).length&&!confirm('載入後會取代目前的複驗紀錄，確定嗎？'))return;
-  S.r={items,v:{},n:{},unit:unit||S.unit};save();$('#re-outp').hidden=true;renderRe();
+  S.r={items,v:{},n:{},unit};save();$('#re-outp').hidden=true;renderRe();
   msg.textContent=`已載入 ${items.length} 項。`;
 }
 function setR(it,s){
@@ -506,7 +507,7 @@ function reText(){
   const d=new Date(),G={0:[],1:[],2:[]};
   S.r.items.forEach((x,i)=>{const s=S.r.v[i]||0;G[s].push(`${x.no}. ${x.room?x.room+'｜':''}${x.text}${s===2&&S.r.n[i]?' → 複驗：'+S.r.n[i]:''}`)});
   const sec=(t,a)=>a.length?`【${t}】\n${a.join('\n')}\n\n`:'';
-  return `驗屋複驗結果\n戶別：${S.r.unit||S.unit||'（未填）'}\n複驗日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
+  return `驗屋複驗結果\n${S.r.unit?`戶別：${S.r.unit}\n`:''}複驗日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
 }
 $('#re-load').onclick=()=>loadRe($('#re-in').value);
 $('#re-local').onclick=()=>loadRe(defectText());
@@ -519,7 +520,7 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？攜帶工具清單、間數、戶別、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？攜帶工具清單、間數、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
