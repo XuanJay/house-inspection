@@ -69,6 +69,12 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .item[data-s="1"] b{color:var(--muted);font-weight:500}
 .note{grid-column:1/-1;display:none;width:100%;font:inherit;font-size:.92rem;padding:6px 8px;border:1px solid var(--bad);border-radius:6px;background:var(--note);color:var(--fg)}
 .item[data-s="2"] .note{display:block}
+.ph{grid-column:1/-1;display:none;flex-wrap:wrap;gap:6px;align-items:center}
+.item[data-s="2"] .ph{display:flex}
+.ph img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer}
+.cam{font:inherit;font-size:.88rem;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer}
+body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就會不見，拍完請先分享";flex-basis:100%;font-size:.8rem;color:var(--bad)}
+.hd span{display:flex;gap:6px}
 .no{display:none;color:var(--bad);font-weight:700;margin-right:6px}
 .item[data-s="2"] .no{display:inline}
 .pk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
@@ -100,7 +106,7 @@ body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
 footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
-@media print{nav,.bar,.pbar,.sty,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
+@media print{nav,.bar,.pbar,.sty,.cam,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
 </style>
 </head>
 <body>
@@ -110,7 +116,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <option value="">經典藍</option><option value="forest">森林綠</option><option value="sunset">暖陽橘</option>
       <option value="ocean">海洋青</option><option value="berry">莓果紫</option><option value="ink">墨灰</option>
     </select></label></div>
-  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✗ 會出現備註欄。沒有的項目跳過即可。勾選只存在這台裝置的瀏覽器裡。</p>
+  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✗ 會出現備註欄和拍照鈕。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
   <div class="mode" role="group" aria-label="模式"><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
 </header>
 <nav><div class="chips" id="nav"></div><div class="tot"><span id="tot-t"></span><span class="pbar" id="tot-bar" role="progressbar" aria-label="總進度" aria-valuemin="0"></span></div></nav>
@@ -160,16 +166,17 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
-      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面的「基本設定」各填不同的代號。</li>
+      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在最上面的「基本設定」各填不同的代號。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
-      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目右上角的「分享照片」，傳到 LINE 或存到相簿；照片只存在這支手機，當天就要分享。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
   </details>
 
   <div id="rooms"></div>
+  <input type="file" id="camin" accept="image/*" capture="environment" hidden>
 
   <section class="card" id="outp" hidden>
-    <div class="hd"><h2>缺失項目</h2><button type="button" id="cp">複製</button></div>
+    <div class="hd"><h2>缺失項目</h2><span><button type="button" id="shp" hidden>分享照片</button><button type="button" id="cp">複製</button></span></div>
     <textarea id="outt" rows="14" readonly></textarea>
     <p class="sub" id="outmsg"></p>
   </section>
@@ -202,7 +209,8 @@ const PACK=[
   ['紙膠帶 20 mm ×7 捲（不同色）','標缺失位置與編號；兩個人各用一色，一看就知道是 A 還是 B 的'],
   ['FUJIYA FTL-150-BG 鋁合金水平尺','門框、窗框、檯面、插座面板歪不歪，隨手量用'],
   ['BOSCH GMS 120-27 牆體探測儀（選帶）','驗缺失用不太到；可以順便標出電視牆、吊櫃、層板預定位置的牆內管線與輕隔間骨架，拍照留存，日後鑽孔避開'],
-  ['手機內視鏡（Type-C、直徑 5.5 mm、線長 1 m、帶燈）','看地排、落水頭內有沒有水泥塊、砂石；維修孔裡看不到的角落。只看得到前 1 m；伸進有水的管子前，先確認鏡頭會不會進水']]],
+  ['手機內視鏡（Type-C、直徑 5.5 mm、線長 1 m、帶燈）','看地排、落水頭內有沒有水泥塊、砂石；維修孔裡看不到的角落。只看得到前 1 m；伸進有水的管子前，先確認鏡頭會不會進水'],
+  ['FLIR ONE Pro 熱像儀（接手機）','先在手機裝好 FLIR ONE app、把熱像儀充飽電。淋水、蓄水測試後掃牆面和窗框四周，比旁邊冷的區塊可能是濕的']]],
  ['手上已有：照明與工具',[
   ['手電筒','貼著牆斜照看油漆；照天花板維修孔。出門前確認電量'],
   ['TEVC 胸前快扣 LED 工作燈（Type-C 充電、600 mAh）','夾在胸前空出雙手：爬梯看維修孔、蹲著看水槽下櫃和配電箱時用。電池小，出門前充飽'],
@@ -257,7 +265,7 @@ const COMMON={
   ['玻璃與窗框','沒有刮傷破損；保護膜還沒撕的，請建商撕掉再驗'],
   ['矽利康','窗框四周連續，沒有漏打或脫落'],
   ['軌道排水','倒一點水到下軌，要往外排，不能積在軌道或流進室內'],
-  ['淋水測試（做得到時）','用軟管接水龍頭，對窗框外側淋水 30 分鐘，看室內窗框與牆角有沒有滲水'],
+  ['淋水測試（做得到時）','用軟管接水龍頭，對窗框外側淋水 30 分鐘，看室內窗框與牆角有沒有滲水；淋完用 FLIR 熱像儀掃窗框四周，比旁邊冷的區塊可能是濕的'],
   ['玻璃厚度與種類','對照建材表；自己量不了就請建商出示規格'],
   ['窗台高度','量出來記在備註（法規門檻待確認）'],
   ['窗框外側','把窗打開往外看，靠陽台的窗站到陽台看：窗框外圍的壁磚填縫飽滿、沒有破損，矽利康沒有漏打。專業驗屋報告最常在這裡抓到填縫不實，雨水也最容易從這裡滲進來']]],
@@ -314,7 +322,7 @@ const DEF={
    ['排水坡度','倒一桶水或放彈珠：要流向排水孔，不能積水、不能往門口流（標準：至少 1/100，每 1 m 降 1 cm）'],
    ['地磚與壁磚空心','浴室底下有防水層，空心要特別注意；壁磚整面都敲。單片空心超過 30%，或有 4 處 50 元硬幣大小的空心，就算缺失'],
    ['門口擋水','有門檻或止水墩，淋浴的水不會流到門外'],
-   ['蓄水測試（防水層）','用寬版膠帶封住地排，放一層水（低於門檻）靜置，驗完其他地方再回來看：水位有沒有降、隔壁牆面和門外地面有沒有濕。看完撕掉膠帶放水']]],
+   ['蓄水測試（防水層）','用寬版膠帶封住地排，放一層水（低於門檻）靜置，驗完其他地方再回來看：水位有沒有降、隔壁牆面和門外地面有沒有濕（可用 FLIR 熱像儀掃，比旁邊冷的區塊可能是濕的）。看完撕掉膠帶放水']]],
   ['衛浴設備',[
    ['馬桶','大小號都沖；丟幾張衛生紙沖看看；坐上去晃不能動；底座矽利康；沖完水箱會停水'],
    ['洗手台','放水測試；下方接頭用衛生紙擦；龍頭冷熱；台面穩固'],
@@ -405,9 +413,10 @@ function render(){
   $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}"${open.has('sec-'+s.id)?' open':''}><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span><span class="pbar" data-bar="${s.id}" role="progressbar" aria-label="${s.t} 進度" aria-valuemin="0"></span></summary>`+
     (s.note?`<p class="secnote">${s.note}</p>`:'')+
     s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h],i)=>
-      `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"></div>`).join('')).join('')+
+      `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"><div class="ph"><button type="button" class="cam">📷 拍照</button></div></div>`).join('')).join('')+
     `</details>`).join('');
   document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
+  paintPh();
   $('#nav').innerHTML=`<a href="#sec-pack">建議攜帶工具清單</a><a href="#sec-flow">流程</a>`+secs.map(s=>`<a href="#sec-${s.id}">${s.t.replace('（含玄關）','')}<span class="n" data-navn="${s.id}"></span></a>`).join('');
   document.querySelectorAll('[data-c]').forEach(x=>x.value=S.c[x.dataset.c]);
   $('#unit').value=S.unit;
@@ -484,7 +493,51 @@ function copyOut(ta,msg){
   const fallback=()=>{ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)done();else msg.textContent='沒辦法自動複製，文字已經選取，請手動複製。'};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
 }
-$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
+$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();updShp();copyOut($('#outt'),$('#outmsg'));};
+
+// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；只在 ✗ 的項目顯示、只分享 ✗ 項目的照片
+const PH={};let db=null,camK=null;
+const noIdb=()=>document.body.classList.add('noidb');
+const idb=(mode,fn)=>new Promise((ok,ng)=>{if(!db)return ng();const tx=db.transaction('p',mode);fn(tx.objectStore('p'));tx.oncomplete=ok;tx.onerror=tx.onabort=ng;});
+const phSave=k=>idb('readwrite',st=>PH[k]&&PH[k].length?st.put(PH[k],k):st.delete(k)).catch(noIdb);
+function paintOne(it){
+  const ph=it.querySelector('.ph');
+  ph.querySelectorAll('img').forEach(i=>{URL.revokeObjectURL(i.src);i.remove()});
+  (PH[it.dataset.k]||[]).forEach((b,i)=>{const im=new Image();im.src=URL.createObjectURL(b);im.alt=`照片 ${i+1}（點一下刪除）`;im.dataset.i=i;ph.append(im)});
+}
+function paintPh(){document.querySelectorAll('#rooms .item').forEach(it=>{if(PH[it.dataset.k]||it.querySelector('.ph img'))paintOne(it)});updShp();}
+function phList(){
+  const L=[];
+  for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach((_,i)=>{const k=k3(s.id,gk,i);
+    if(S.v[k]===2)(PH[k]||[]).forEach((b,j)=>L.push(new File([b],`${tag(k)}-${j+1}.${(b.type.split('/')[1]||'jpg').replace('jpeg','jpg')}`,{type:b.type||'image/jpeg'})))}));
+  return L;
+}
+function updShp(){const n=phList().length,b=$('#shp');b.hidden=!n;b.textContent=`分享照片（${n}）`;}
+function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
+  im.onload=()=>{const r=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(im.naturalWidth*r));c.height=Math.max(1,Math.round(im.naturalHeight*r));c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);c.toBlob(b=>ok(b||f),'image/jpeg',.82)};
+  im.onerror=()=>{URL.revokeObjectURL(u);ok(f)};im.src=u;});}
+try{const rq=indexedDB.open('yanwu-photos',1);rq.onupgradeneeded=()=>rq.result.createObjectStore('p');rq.onerror=noIdb;
+  rq.onsuccess=()=>{db=rq.result;const c=db.transaction('p').objectStore('p').openCursor();c.onsuccess=()=>{const r=c.result;if(r){PH[r.key]=r.value;r.continue()}else paintPh()}};
+}catch(e){noIdb()}
+$('#rooms').addEventListener('click',e=>{
+  if(e.target.closest('.cam')){camK=e.target.closest('.item').dataset.k;$('#camin').value='';$('#camin').click();return;}
+  const im=e.target.closest('.ph img');
+  if(im&&confirm('刪除這張照片？')){const it=im.closest('.item'),k=it.dataset.k;PH[k].splice(+im.dataset.i,1);phSave(k);paintOne(it);updShp();}
+});
+$('#camin').onchange=async()=>{
+  const f=$('#camin').files[0],k=camK;if(!f||!k)return;
+  (PH[k]=PH[k]||[]).push(await shrink(f));phSave(k);
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+  const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);updShp();
+};
+$('#shp').onclick=()=>{
+  const files=phList();if(!files.length)return;
+  if(navigator.canShare&&navigator.canShare({files})){navigator.share({files}).catch(()=>{});return;}
+  files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)},i*300));
+  $('#outmsg').textContent=`這個瀏覽器不能直接分享，已下載 ${files.length} 張照片。`;
+};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -541,7 +594,7 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code});save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code});save();for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
