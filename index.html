@@ -117,13 +117,13 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <label class="unit">戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
   </section>
 
-  <details class="sec" id="sec-pack" open>
+  <details class="sec" id="sec-pack">
     <summary><span class="t">帶去清單</span><span class="prog" id="pk-prog"></span></summary>
     <div id="pack"></div>
   </details>
 
-  <section class="card" id="sec-flow">
-    <h2>驗屋當天流程</h2>
+  <details class="sec" id="sec-flow">
+    <summary><span class="t">驗屋當天流程</span></summary>
     <ol class="flow">
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
@@ -133,7 +133,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
       <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
-  </section>
+  </details>
 
   <div id="rooms"></div>
 
@@ -371,7 +371,8 @@ function render(){
     `<label class="pk"><input type="checkbox" data-p="${g}|${i}"><span><b>${t}</b><span class="hint">${h}</span></span></label>`).join('')).join('');
   document.querySelectorAll('[data-p]').forEach(x=>x.checked=!!S.p[x.dataset.p]);
   const secs=sections();
-  $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}" open><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span><span class="pbar" data-bar="${s.id}" role="progressbar" aria-label="${s.t} 進度" aria-valuemin="0"></span></summary>`+
+  const open=new Set([...document.querySelectorAll('#rooms details[open]')].map(d=>d.id));
+  $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}"${open.has('sec-'+s.id)?' open':''}><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span><span class="pbar" data-bar="${s.id}" role="progressbar" aria-label="${s.t} 進度" aria-valuemin="0"></span></summary>`+
     (s.note?`<p class="secnote">${s.note}</p>`:'')+
     s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h],i)=>
       `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"></div>`).join('')).join('')+
@@ -503,7 +504,10 @@ $('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受
 function setMode(m){S.mode=m;document.body.dataset.mode=m;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
 document.querySelector('.mode').onclick=e=>{const b=e.target.closest('button');if(b){setMode(b.dataset.m);save();window.scrollTo(0,0);}};
 $('#prt').onclick=()=>window.print();
-window.addEventListener('beforeprint',()=>document.querySelectorAll('details').forEach(d=>d.open=true));
+let shut=[];
+window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
+window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
+$('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
 $('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？帶去清單、間數、戶別、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
