@@ -78,7 +78,9 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-.row button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.hd h2{margin:0}
+.row button,.hd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 .ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
@@ -96,8 +98,8 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 <main>
   <section class="card" id="re">
     <h2>複驗</h2>
-    <p class="sub">把第一次匯出的「驗屋缺失清單」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
-    <textarea id="re-in" rows="6" placeholder="貼上「驗屋缺失清單」全文" aria-label="貼上缺失清單"></textarea>
+    <p class="sub">把第一次匯出的「驗屋缺失項目」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
+    <textarea id="re-in" rows="6" placeholder="貼上「驗屋缺失項目」全文" aria-label="貼上缺失項目"></textarea>
     <div class="row">
       <button type="button" id="re-load">載入</button>
       <button type="button" id="re-local">帶入這支手機的初驗缺失</button>
@@ -149,7 +151,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <div id="rooms"></div>
 
   <section class="card" id="outp" hidden>
-    <h2>缺失清單</h2>
+    <div class="hd"><h2>缺失項目</h2><button type="button" id="cp">複製</button></div>
     <textarea id="outt" rows="14" readonly></textarea>
     <p class="sub" id="outmsg"></p>
   </section>
@@ -160,7 +162,6 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 <div class="bar"><div class="in">
   <span id="sum" class="m1"></span>
   <button type="button" class="pri m1" id="exp">匯出缺失清單</button>
-  <button type="button" class="m1" id="prt">列印</button>
   <button type="button" class="m1" id="clr">清除</button>
   <span id="rsum" class="m2"></span>
   <button type="button" class="pri m2" id="re-exp">匯出複驗結果</button>
@@ -455,7 +456,8 @@ function defectText(){
     s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
     if(part)body+=`【${s.t}】\n${part}\n`;
   }
-  return `驗屋缺失清單\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
+  const hms=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  return `驗屋缺失項目\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${hms}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
 }
 function copyOut(ta,msg){
   const box=ta.closest('section');box.hidden=false;box.scrollIntoView({behavior:'smooth'});
@@ -464,7 +466,7 @@ function copyOut(ta,msg){
   const fallback=()=>{ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)done();else msg.textContent='沒辦法自動複製，文字已經選取，請手動複製。'};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
 }
-$('#exp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
+$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -511,16 +513,15 @@ function reText(){
 }
 $('#re-load').onclick=()=>loadRe($('#re-in').value);
 $('#re-local').onclick=()=>loadRe(defectText());
-$('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失清單。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
+$('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失項目。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
 $('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受影響。')){S.r=fresh().r;save();$('#re-in').value='';$('#re-outp').hidden=true;$('#re-msg').textContent='';renderRe();}};
 function setMode(m){S.mode=m;document.body.dataset.mode=m;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
 document.querySelector('.mode').onclick=e=>{const b=e.target.closest('button');if(b){setMode(b.dataset.m);save();window.scrollTo(0,0);}};
-$('#prt').onclick=()=>window.print();
 let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？攜帶工具清單、間數、代號與複驗紀錄也會一起清掉。')){S=fresh();save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選與備註？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code});save();$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
