@@ -123,8 +123,8 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 <main>
   <section class="card" id="re">
     <h2>複驗</h2>
-    <p class="sub">把第一次匯出的「驗屋缺失項目」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
-    <textarea id="re-in" rows="6" placeholder="貼上「驗屋缺失項目」全文" aria-label="貼上缺失項目"></textarea>
+    <p class="sub">把初驗匯出的「驗屋初驗結果」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
+    <textarea id="re-in" rows="6" placeholder="貼上「驗屋初驗結果」全文" aria-label="貼上缺失項目"></textarea>
     <div class="row">
       <button type="button" id="re-clr">清除</button>
       <button type="button" id="re-load">載入</button>
@@ -484,9 +484,9 @@ function defectText(){
     s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
     if(part)body+=`【${s.t}】\n${part}\n`;
   }
-  const hms=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
-  return `驗屋缺失項目\n代號：${S.code.trim()||'（未填）'}\n日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${hms}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
+  return `驗屋初驗結果\n代號：${S.code.trim()||'（未填）'}\n初驗日期：${when(d)}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
 }
+function when(d){return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} `+[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');}
 function copyOut(ta,msg){
   const box=ta.closest('section');box.hidden=false;box.scrollIntoView({behavior:'smooth'});
   msg.textContent='清單在上面，可以手動複製。';
@@ -584,7 +584,7 @@ function reText(){
   const d=new Date(),G={0:[],1:[],2:[]};
   S.r.items.forEach((x,i)=>{const s=S.r.v[i]||0;G[s].push(`${x.no}. ${x.room?x.room+'｜':''}${x.text}${s===2&&S.r.n[i]?' → 複驗：'+S.r.n[i]:''}`)});
   const sec=(t,a)=>a.length?`【${t}】\n${a.join('\n')}\n\n`:'';
-  return `驗屋複驗結果\n${S.r.unit?`戶別：${S.r.unit}\n`:''}複驗日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
+  return `驗屋複驗結果\n${S.r.unit?`戶別：${S.r.unit}\n`:''}複驗日期：${when(d)}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
 }
 $('#re-load').onclick=()=>loadRe($('#re-in').value);
 $('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失項目。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
