@@ -76,7 +76,7 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .item[data-s="1"] .ph,.item[data-s="2"] .ph{display:flex}
 .ph img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer}
 .cam{font:inherit;font-size:.88rem;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer}
-body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就會不見，拍完請先分享";flex-basis:100%;font-size:.8rem;color:var(--bad)}
+body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就會不見，拍完請先存到雲端硬碟";flex-basis:100%;font-size:.8rem;color:var(--bad)}
 .hd span{display:flex;gap:6px}
 .no{display:none;color:var(--bad);font-weight:700;margin-right:6px}
 .item[data-s="2"] .no{display:inline}
@@ -170,7 +170,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>從大門開始，一個空間一個空間照表走。</li>
       <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在「初驗」分頁最上面的「基本設定」各填不同的代號。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
-      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目右上角的「分享照片」，傳到 LINE 或存到相簿；照片只存在這支手機，當天就要分享。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目底下的「存到 Google 雲端硬碟」，會跟缺失清單一起存；照片只存在這支手機，當天就要存。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
   </details>
 
@@ -183,7 +183,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <input type="file" id="camin" accept="image/*" capture="environment" hidden>
 
   <section class="card" id="outp" hidden>
-    <div class="hd"><h2>缺失項目</h2><span><button type="button" id="shp" hidden>分享照片</button><button type="button" id="cp">複製</button></span></div>
+    <div class="hd"><h2>缺失項目</h2><span><button type="button" id="cp">複製</button></span></div>
     <textarea id="outt" rows="14" readonly></textarea>
     <p class="sub" id="outmsg"></p>
     <div id="gd" hidden><button type="button" id="gup">存到 Google 雲端硬碟</button><p class="sub" id="gto"></p><p class="sub" id="gmsg" aria-live="polite"></p></div>
@@ -490,7 +490,6 @@ function update(){
   const fs=S.c.f.slice(0,S.c.n),sum=r=>fs.reduce((a,f)=>a+f[r],0);
   $('#cfg-sum').textContent=(S.c.n>1?`${S.c.n} 層 · `:'')+`${sum('bed')} 臥 · ${sum('bath')} 衛 · ${sum('balc')} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
   fill($('#tot-bar'),D,bad,N);
-  updShp();
 }
 
 document.addEventListener('click',e=>{
@@ -533,9 +532,9 @@ function copyOut(ta,msg){
   const fallback=()=>{ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)done();else msg.textContent='沒辦法自動複製，文字已經選取，請手動複製。'};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
 }
-$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();updShp();copyOut($('#outt'),$('#outmsg'));};
+$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
 
-// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；✓／✗ 的項目都能拍，分享時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
+// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；✓／✗ 的項目都能拍，上傳時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
 const PH={};let db=null,camK=null;
 const noIdb=()=>document.body.classList.add('noidb');
 const idb=(mode,fn)=>new Promise((ok,ng)=>{if(!db)return ng();const tx=db.transaction('p',mode);fn(tx.objectStore('p'));tx.oncomplete=ok;tx.onerror=tx.onabort=ng;});
@@ -545,7 +544,7 @@ function paintOne(it){
   ph.querySelectorAll('img').forEach(i=>{URL.revokeObjectURL(i.src);i.remove()});
   (PH[it.dataset.k]||[]).forEach((b,i)=>{const im=new Image();im.src=URL.createObjectURL(b);im.alt=`照片 ${i+1}（點一下刪除）`;im.dataset.i=i;ph.append(im)});
 }
-function paintPh(){document.querySelectorAll('#rooms .item').forEach(it=>{if(PH[it.dataset.k]||it.querySelector('.ph img'))paintOne(it)});updShp();}
+function paintPh(){document.querySelectorAll('#rooms .item').forEach(it=>{if(PH[it.dataset.k]||it.querySelector('.ph img'))paintOne(it)});}
 function phList(){
   const bad=[],ok=[],ext=b=>(b.type.split('/')[1]||'jpg').replace('jpeg','jpg'),safe=t=>t.replace(/[\\/:*?"<>|]/g,'_');
   for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i),v=S.v[k];
@@ -554,7 +553,6 @@ function phList(){
       else if(v===1)ok.push(new File([b],safe(`合格-${s.t.replace('（含玄關）','')}-${t}-${j+1}.${ext(b)}`),opt));})}));
   return bad.concat(ok);
 }
-function updShp(){const n=phList().length,b=$('#shp');b.hidden=!n;b.textContent=`分享照片（${n}）`;}
 function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
   im.onload=()=>{const r=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');
     c.width=Math.max(1,Math.round(im.naturalWidth*r));c.height=Math.max(1,Math.round(im.naturalHeight*r));c.getContext('2d').drawImage(im,0,0,c.width,c.height);
@@ -566,19 +564,13 @@ try{const rq=indexedDB.open('yanwu-photos',1);rq.onupgradeneeded=()=>rq.result.c
 $('#rooms').addEventListener('click',e=>{
   if(e.target.closest('.cam')){camK=e.target.closest('.item').dataset.k;$('#camin').value='';$('#camin').click();return;}
   const im=e.target.closest('.ph img');
-  if(im&&confirm('刪除這張照片？')){const it=im.closest('.item'),k=it.dataset.k;PH[k].splice(+im.dataset.i,1);phSave(k);paintOne(it);updShp();}
+  if(im&&confirm('刪除這張照片？')){const it=im.closest('.item'),k=it.dataset.k;PH[k].splice(+im.dataset.i,1);phSave(k);paintOne(it);}
 });
 $('#camin').onchange=async()=>{
   const f=$('#camin').files[0],k=camK;if(!f||!k)return;
   (PH[k]=PH[k]||[]).push(await shrink(f));phSave(k);
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-  const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);updShp();
-};
-$('#shp').onclick=()=>{
-  const files=phList();if(!files.length)return;
-  if(navigator.canShare&&navigator.canShare({files})){navigator.share({files}).catch(()=>{});return;}
-  files.forEach((f,i)=>setTimeout(()=>{const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)},i*300));
-  $('#outmsg').textContent=`這個瀏覽器不能直接分享，已下載 ${files.length} 張照片。`;
+  const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);
 };
 
 // Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」，放初驗結果 .txt＋照片。
