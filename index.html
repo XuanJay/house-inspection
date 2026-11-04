@@ -583,7 +583,7 @@ $('#shp').onclick=()=>{
 
 // Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」，放初驗結果 .txt＋照片。
 // 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡選的資料夾）；資料夾 ID 只存在這台裝置，不寫進公開網頁。
-const GCFG={client:'',key:'',app:''};   // ← Google Cloud：OAuth 用戶端 ID、API 金鑰（限 Picker API＋限本站網址）、專案編號
+const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleusercontent.com',key:'AIzaSyD1DlPfWDK_CIHWvPiSH3Ps5B4Npa-UkWA',app:'646847553036'};   // ← Google Cloud 專案 xuanjay-house-inspection：OAuth 用戶端 ID、API 金鑰（限 Picker＋Drive API，限本站與 docs.google.com）、專案編號
 let gtok=null,gexp=0;
 const gFolder=()=>{try{return JSON.parse(localStorage.getItem('yanwu-gfolder'))}catch(e){return null}};
 function gShowTo(){const f=gFolder();$('#gto').innerHTML=f?`存到：${esc(f.name)}　<a href="#" id="gchg">換資料夾</a>`:'第一次上傳會請你登入 Google，並選要存放的資料夾。';}
