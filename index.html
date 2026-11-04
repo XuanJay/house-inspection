@@ -70,7 +70,7 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .note{grid-column:1/-1;display:none;width:100%;font:inherit;font-size:.92rem;padding:6px 8px;border:1px solid var(--bad);border-radius:6px;background:var(--note);color:var(--fg)}
 .item[data-s="2"] .note{display:block}
 .ph{grid-column:1/-1;display:none;flex-wrap:wrap;gap:6px;align-items:center}
-.item[data-s="2"] .ph{display:flex}
+.item[data-s="1"] .ph,.item[data-s="2"] .ph{display:flex}
 .ph img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer}
 .cam{font:inherit;font-size:.88rem;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);cursor:pointer}
 body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就會不見，拍完請先分享";flex-basis:100%;font-size:.8rem;color:var(--bad)}
@@ -116,7 +116,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <option value="">經典藍</option><option value="forest">森林綠</option><option value="sunset">暖陽橘</option>
       <option value="ocean">海洋青</option><option value="berry">莓果紫</option><option value="ink">墨灰</option>
     </select></label></div>
-  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✗ 會出現備註欄和拍照鈕。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
+  <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✓ 或 ✗ 會出現拍照鈕，按 ✗ 還會出現備註欄。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
   <div class="mode" role="group" aria-label="模式"><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
 </header>
 <nav><div class="chips" id="nav"></div><div class="tot"><span id="tot-t"></span><span class="pbar" id="tot-bar" role="progressbar" aria-label="總進度" aria-valuemin="0"></span></div></nav>
@@ -452,6 +452,7 @@ function update(){
   $('#tot-t').textContent=`總進度 ${D}/${N} · ${Math.round(D/N*100)}%`;
   $('#cfg-sum').textContent=`${S.c.bed} 臥 · ${S.c.bath} 衛 · ${S.c.balc} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
   fill($('#tot-bar'),D,bad,N);
+  updShp();
 }
 
 document.addEventListener('click',e=>{
@@ -495,7 +496,7 @@ function copyOut(ta,msg){
 }
 $('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();updShp();copyOut($('#outt'),$('#outmsg'));};
 
-// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；只在 ✗ 的項目顯示、只分享 ✗ 項目的照片
+// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；✓／✗ 的項目都能拍，分享時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
 const PH={};let db=null,camK=null;
 const noIdb=()=>document.body.classList.add('noidb');
 const idb=(mode,fn)=>new Promise((ok,ng)=>{if(!db)return ng();const tx=db.transaction('p',mode);fn(tx.objectStore('p'));tx.oncomplete=ok;tx.onerror=tx.onabort=ng;});
@@ -507,10 +508,12 @@ function paintOne(it){
 }
 function paintPh(){document.querySelectorAll('#rooms .item').forEach(it=>{if(PH[it.dataset.k]||it.querySelector('.ph img'))paintOne(it)});updShp();}
 function phList(){
-  const L=[];
-  for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach((_,i)=>{const k=k3(s.id,gk,i);
-    if(S.v[k]===2)(PH[k]||[]).forEach((b,j)=>L.push(new File([b],`${tag(k)}-${j+1}.${(b.type.split('/')[1]||'jpg').replace('jpeg','jpg')}`,{type:b.type||'image/jpeg'})))}));
-  return L;
+  const bad=[],ok=[],ext=b=>(b.type.split('/')[1]||'jpg').replace('jpeg','jpg'),safe=t=>t.replace(/[\\/:*?"<>|]/g,'_');
+  for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i),v=S.v[k];
+    (PH[k]||[]).forEach((b,j)=>{const opt={type:b.type||'image/jpeg'};
+      if(v===2)bad.push(new File([b],`${tag(k)}-${j+1}.${ext(b)}`,opt));
+      else if(v===1)ok.push(new File([b],safe(`合格-${s.t.replace('（含玄關）','')}-${t}-${j+1}.${ext(b)}`),opt));})}));
+  return bad.concat(ok);
 }
 function updShp(){const n=phList().length,b=$('#shp');b.hidden=!n;b.textContent=`分享照片（${n}）`;}
 function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
