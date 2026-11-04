@@ -5,10 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>新成屋驗屋檢查表</title>
+<script>try{var st=localStorage.getItem('yanwu-style');if(st)document.documentElement.dataset.style=st}catch(e){}</script>
 <style>
-:root{--bg:#f6f5f2;--card:#fff;--fg:#1f2328;--muted:#5f666e;--line:#dedbd4;--accent:#2f6fb0;--ok:#2e7d4f;--ok-bg:#e3f2e8;--bad:#c0392b;--bad-bg:#fbe5e1;--note:#fff8e1;--on-accent:#fff}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}}
-:root[data-theme="dark"]{--bg:#16181b;--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:#6aa5e0;--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}
+/* 風格：每種只換主色 --h-acc 和四個區塊色 --c1~--c4（設定／攜帶工具／流程／缺失），淺色、深色共用 */
+:root{--h-acc:#2f6fb0;--c1:#5b6b7f;--c2:#2a9d8f;--c3:#d08c2a;--c4:#c0392b}
+:root[data-style="forest"]{--h-acc:#2e7d4f;--c1:#6b7f5b;--c2:#3a9d5d;--c3:#b8930f;--c4:#b5523b}
+:root[data-style="sunset"]{--h-acc:#c2571a;--c1:#8d6e63;--c2:#e07a2e;--c3:#d4a017;--c4:#b83232}
+:root[data-style="ocean"]{--h-acc:#0f7c8c;--c1:#4f6d8a;--c2:#1aa3a3;--c3:#3b82c4;--c4:#d1495b}
+:root[data-style="berry"]{--h-acc:#7b4fa8;--c1:#6c5b7b;--c2:#a05195;--c3:#d45087;--c4:#c0392b}
+:root[data-style="ink"]{--h-acc:#3d4a57;--c1:#6b7280;--c2:#8a8f98;--c3:#9a8c6e;--c4:#a14a4a}
+:root{--bg:color-mix(in srgb,var(--h-acc) 5%,#f6f5f2);--card:#fff;--fg:#1f2328;--muted:#5f666e;--line:#dedbd4;--accent:var(--h-acc);--ok:#2e7d4f;--ok-bg:#e3f2e8;--bad:#c0392b;--bad-bg:#fbe5e1;--note:#fff8e1;--on-accent:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:color-mix(in srgb,var(--h-acc) 7%,#16181b);--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:color-mix(in srgb,var(--h-acc) 60%,#fff);--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}}
+:root[data-theme="dark"]{--bg:color-mix(in srgb,var(--h-acc) 7%,#16181b);--card:#1f2226;--fg:#e6e6e3;--muted:#9aa0a6;--line:#33373c;--accent:color-mix(in srgb,var(--h-acc) 60%,#fff);--ok:#5cc187;--ok-bg:#1d3326;--bad:#ef7a6c;--bad-bg:#3a201d;--note:#2c2818;--on-accent:#0e1a26}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
@@ -78,6 +86,13 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec-pack,body[data-mode="re"] #sec-flow,body[data-mode="re"] #rooms,body[data-mode="re"] #outp,body[data-mode="re"] .m1,body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2{display:none!important}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+#sec-cfg{--c:var(--c1)}#sec-pack{--c:var(--c2)}#sec-flow{--c:var(--c3)}#outp{--c:var(--c4)}
+#sec-cfg,#sec-pack,#sec-flow,#outp{border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
+#sec-cfg>summary::before,#sec-pack>summary::before,#sec-flow>summary::before{color:var(--c)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.top h1{margin:0}
+.sty{display:flex;align-items:center;gap:4px;font-size:.85rem;color:var(--muted);white-space:nowrap}
+.sty select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
 .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .hd h2{margin:0}
 .row button,.hd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
@@ -85,12 +100,16 @@ body[data-mode="re"] nav,body[data-mode="re"] #sec-cfg,body[data-mode="re"] #sec
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
 footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
-@media print{nav,.bar,.pbar,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
+@media print{nav,.bar,.pbar,.sty,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
 </style>
 </head>
 <body>
 <header>
-  <h1>新成屋驗屋檢查表</h1>
+  <div class="top"><h1>新成屋驗屋檢查表</h1>
+    <label class="sty">風格 <select id="style">
+      <option value="">經典藍</option><option value="forest">森林綠</option><option value="sunset">暖陽橘</option>
+      <option value="ocean">海洋青</option><option value="berry">莓果紫</option><option value="ink">墨灰</option>
+    </select></label></div>
   <p class="sub m1">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✗ 會出現備註欄。沒有的項目跳過即可。勾選只存在這台裝置的瀏覽器裡。</p>
   <div class="mode" role="group" aria-label="模式"><button type="button" data-m="first" aria-pressed="true">初驗</button><button type="button" data-m="re" aria-pressed="false">複驗</button></div>
 </header>
@@ -101,9 +120,8 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <p class="sub">把第一次匯出的「驗屋缺失項目」貼在下面（兩個人的清單可以一起貼），按「載入」，再逐項標已修或未修；未修的可以寫備註。勾選只存在這台裝置的瀏覽器裡。</p>
     <textarea id="re-in" rows="6" placeholder="貼上「驗屋缺失項目」全文" aria-label="貼上缺失項目"></textarea>
     <div class="row">
+      <button type="button" id="re-clr">清除</button>
       <button type="button" id="re-load">載入</button>
-      <button type="button" id="re-local">帶入這支手機的初驗缺失</button>
-      <button type="button" id="re-clr">清除複驗</button>
     </div>
     <p class="sub" id="re-msg" aria-live="polite"></p>
     <div id="re-list"></div>
@@ -136,7 +154,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   </details>
 
   <details class="sec" id="sec-flow">
-    <summary><span class="t">驗屋當天流程</span></summary>
+    <summary><span class="t">驗屋當日流程</span></summary>
     <ol class="flow">
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
@@ -504,6 +522,7 @@ function updRe(){
   const n=S.r.items.length,c=[0,0,0];
   for(let i=0;i<n;i++)c[S.r.v[i]||0]++;
   $('#rsum').innerHTML=n?`已修 ${c[1]} · <b>未修 ${c[2]}</b> · 未查 ${c[0]}`:'尚未載入清單';
+  $('#re-exp').hidden=!n;
 }
 function reText(){
   const d=new Date(),G={0:[],1:[],2:[]};
@@ -512,11 +531,12 @@ function reText(){
   return `驗屋複驗結果\n${S.r.unit?`戶別：${S.r.unit}\n`:''}複驗日期：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
 }
 $('#re-load').onclick=()=>loadRe($('#re-in').value);
-$('#re-local').onclick=()=>loadRe(defectText());
 $('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失項目。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
 $('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受影響。')){S.r=fresh().r;save();$('#re-in').value='';$('#re-outp').hidden=true;$('#re-msg').textContent='';renderRe();}};
 function setMode(m){S.mode=m;document.body.dataset.mode=m;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
 document.querySelector('.mode').onclick=e=>{const b=e.target.closest('button');if(b){setMode(b.dataset.m);save();window.scrollTo(0,0);}};
+const sty=$('#style');sty.value=document.documentElement.dataset.style||'';
+sty.onchange=()=>{document.documentElement.dataset.style=sty.value;try{localStorage.setItem('yanwu-style',sty.value)}catch(e){}};
 let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
