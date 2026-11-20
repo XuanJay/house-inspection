@@ -582,7 +582,7 @@ $('#camin').onchange=async()=>{
   const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);
 };
 
-// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 第N次複驗 戶別」放複驗結果 .txt。
+// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 第N次複驗 代號 戶別」放複驗結果 .txt。
 // 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡選的資料夾）。預設存到 GDEF（Jay 指定寫死）；
 // 某個 Google 帳號第一次寫不進去（404＝還沒在選擇器點過它）時跳選擇器點一次，之後就直接寫。
 const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleusercontent.com',key:'AIzaSyD1DlPfWDK_CIHWvPiSH3Ps5B4Npa-UkWA',app:'646847553036'};   // ← Google Cloud 專案 xuanjay-house-inspection：OAuth 用戶端 ID、API 金鑰（限 Picker＋Drive API，限本站與 docs.google.com）、專案編號
@@ -638,7 +638,7 @@ async function gSave(b,m,d,label,files,done){
 $('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
   gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
 $('#re-gup').onclick=()=>{const d=new Date(),txt=reText(d);
-  gSave($('#re-gup'),$('#re-gmsg'),d,`第${S.rn}次複驗`+(S.r.unit?' '+S.r.unit:''),[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt);};
+  gSave($('#re-gup'),$('#re-gmsg'),d,[`第${S.rn}次複驗`,S.code.trim(),S.r.unit].filter(Boolean).join(' '),[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt);};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
