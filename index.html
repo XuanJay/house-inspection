@@ -644,7 +644,7 @@ const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleuse
 const GDEF={id:'1kwqVILFrtsBm2HxXJgSiyDfwUSAb2kVj',name:'雲林驗屋'};
 let gtok=null,gexp=0;
 const gFolder=()=>{try{return JSON.parse(localStorage.getItem('yanwu-gfolder'))||GDEF}catch(e){return GDEF}};
-function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`存到：${gFolder().name}（按下去會請你登入 Google）`);}
+function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`存到：${gFolder().name}（如果跳出 Google 視窗，選你登入的帳號）`);}   // 進畫面時已登入；權杖只在記憶體、約 1 小時，存檔時可能再跳一次
 function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
