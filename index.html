@@ -105,7 +105,9 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px}
 #gate .card{max-width:480px;margin:10vh auto 0}
 #gate button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
-#gate #g-in{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+#gate #g-in,#gate #g-go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
+#gate input{font:inherit;width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
 .sty{display:flex;align-items:center;gap:4px;font-size:.85rem;color:var(--muted);white-space:nowrap}
 .sty select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
@@ -122,10 +124,19 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 </head>
 <body>
 <div id="gate" hidden><div class="card">
-  <h2>先登入 Google</h2>
-  <p class="sub" id="g-why"></p>
-  <button type="button" id="g-in">登入 Google</button>
-  <p class="sub" id="g-msg" aria-live="polite"></p>
+  <div id="g-login">
+    <h2>先登入 Google</h2>
+    <p class="sub" id="g-why"></p>
+    <button type="button" id="g-in">登入 Google</button>
+    <p class="sub" id="g-msg" aria-live="polite"></p>
+  </div>
+  <div id="g-code" hidden>
+    <h2>填你的代號</h2>
+    <p class="sub">每支手機填一個不同的代號，例如 A、B、C。缺失編號、紙膠帶、雲端硬碟的資料夾名稱都會帶這個代號，沒填不能開始。</p>
+    <input type="text" id="g-cin" maxlength="3" placeholder="A" autocapitalize="characters" aria-label="我的代號">
+    <button type="button" id="g-go">開始</button>
+    <p class="sub" id="g-cmsg" aria-live="polite"></p>
+  </div>
 </div></div>
 <header>
   <div class="top"><h1>新成屋驗屋檢查表</h1>
@@ -171,7 +182,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <ul class="sub cfgnote">
       <li><b>我負責</b>：多人分工時勾自己負責的範圍，下面只列出那些項目（分法見「操作須知」的「多人分工與順序」）；都不勾就全部列出。匯出時照樣包含你按過 ✗ 的每一項。</li>
       <li class="nofix"><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。</li>
-      <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號。一個人驗可以不填。</li>
+      <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號，雲端硬碟的資料夾名稱也會帶它。沒填代號不能勾選、也不能上傳，一個人驗也要填。</li>
       <li hidden><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
     </ul>
   </details>
@@ -558,6 +569,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('.ok,.bad');if(!b)return;
   const it=b.closest('.item'),want=b.classList.contains('ok')?1:2;
   if(it.dataset.r!==undefined){const i=it.dataset.r,s=S.r.v[i]===want?0:want;if(s)S.r.v[i]=s;else delete S.r.v[i];setR(it,s);save();updRe();return;}
+  if(gate())return;   // 初驗沒代號不能勾
   const k=it.dataset.k,s=S.v[k]===want?0:want;
   if(s)S.v[k]=s;else delete S.v[k];
   if(s===2)S.num[k]=++S.seq;
@@ -596,7 +608,7 @@ function copyOut(ta,msg){
   const fallback=()=>{ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}if(ok)done();else msg.textContent='沒辦法自動複製，文字已經選取，請手動複製。'};
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(ta.value).then(done,fallback);else fallback();
 }
-$('#exp').onclick=$('#cp').onclick=()=>{$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
+$('#exp').onclick=$('#cp').onclick=()=>{if(gate())return;$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
 
 // 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；✓／✗ 的項目都能拍，上傳時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
 const PH={};let db=null,camK=null;
@@ -648,8 +660,7 @@ function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`�
 function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
-  let ok=null;try{ok=localStorage.getItem('yanwu-gok')}catch(e){}
-  if(!ok){$('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」，請先登入 Google。每支手機只要登入一次。`;$('#gate').hidden=false;}
+  $('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」，請先登入 Google。每支手機只要登入一次。`;
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
 function gToken(){return new Promise((ok,ng)=>{
@@ -692,7 +703,15 @@ async function gSave(b,m,d,label,files,done){
     m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
   }finally{b.disabled=false;}
 }
-// 進畫面先登入 Google（只要登入成功就放行，不查資料夾權限）。成功記在這台裝置，之後不再擋
+// 進畫面先過兩關才能用：登入 Google（只要登入成功，不查資料夾權限；記在這台裝置）、填我的代號。
+// 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
+function gate(){
+  let ok=null;try{ok=localStorage.getItem('yanwu-gok')}catch(e){}
+  const login=!!GCFG.client&&!ok,code=!S.code.trim();
+  $('#g-login').hidden=!login;$('#g-code').hidden=login||!code;$('#gate').hidden=!(login||code);
+  if(!login&&code){$('#g-cin').value='';$('#g-cmsg').textContent='';}
+  return login||code;
+}
 $('#g-in').onclick=async()=>{
   const b=$('#g-in'),m=$('#g-msg');
   if(!window.google||!google.accounts){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
@@ -700,14 +719,18 @@ $('#g-in').onclick=async()=>{
   try{
     await gToken();
     try{localStorage.setItem('yanwu-gok','1')}catch(e){}
-    $('#gate').hidden=true;
+    gate();
   }catch(e){
     m.textContent=e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
   }finally{b.disabled=false;}
 };
-$('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
+$('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
+  if(!v){$('#g-cmsg').textContent='請先填代號。';return;}
+  S.code=v;save();render();gate();};
+$('#g-cin').onkeydown=e=>{if(e.key==='Enter')$('#g-go').click();};
+$('#gup').onclick=()=>{if(gate())return;const d=new Date(),txt=defectText(d),code=S.code.trim();
   gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
-$('#re-gup').onclick=()=>{const d=new Date(),txt=reText(d);
+$('#re-gup').onclick=()=>{if(gate())return;const d=new Date(),txt=reText(d);
   gSave($('#re-gup'),$('#re-gmsg'),d,[`第${S.rn}次複驗`,S.code.trim(),S.r.unit].filter(Boolean).join(' '),[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt);};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
@@ -772,6 +795,7 @@ render();
 renderRe();
 if(FIX)document.querySelectorAll('.nofix').forEach(e=>e.hidden=true);
 gInit();
+gate();
 setMode(['guide','re'].includes(S.mode)?S.mode:'first');
 </script>
 </body>
