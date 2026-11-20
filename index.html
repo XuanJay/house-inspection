@@ -595,7 +595,7 @@ function defectText(d=new Date()){
   let n=0,body='';
   for(const s of sections()){
     let part='';
-    s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}\n`}}));
+    s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;const np=(PH[k]||[]).length;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}${np?`（照片 ${np} 張）`:''}\n`}}));
     if(part)body+=`【${s.t}】\n${part}\n`;
   }
   return `驗屋初驗結果\n代號：${S.code.trim()||'（未填）'}\n初驗日期：${when(d)}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
@@ -625,8 +625,9 @@ function phList(){
   const bad=[],ok=[],ext=b=>(b.type.split('/')[1]||'jpg').replace('jpeg','jpg'),safe=t=>t.replace(/[\\/:*?"<>|]/g,'_');
   for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i),v=S.v[k];
     (PH[k]||[]).forEach((b,j)=>{const opt={type:b.type||'image/jpeg'};
-      if(v===2)bad.push(new File([b],`${tag(k)}-${j+1}.${ext(b)}`,opt));
-      else if(v===1)ok.push(new File([b],safe(`合格-${s.t.replace('（含玄關）','')}-${t}-${j+1}.${ext(b)}`),opt));})}));
+      const at=`${s.t.replace('（含玄關）','')}-${t}-${j+1}.${ext(b)}`;   // 檔名帶空間和項目：缺失＝編號開頭、合格＝「合格」開頭
+      if(v===2)bad.push(new File([b],safe(`${tag(k)}-${at}`),opt));
+      else if(v===1)ok.push(new File([b],safe(`合格-${at}`),opt));})}));
   return bad.concat(ok);
 }
 function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
@@ -676,32 +677,53 @@ function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',()=>{
 async function gApi(url,opt,tok){
   const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+tok},opt.headers||{})}));
   if(!r.ok)throw r.status;return r.json();}
-// 初驗、複驗共用：b＝按鈕、m＝訊息欄、d＝資料夾時間（和 txt 裡的日期同一個）、files＝要上傳的檔、done＝全部上傳完才呼叫
-async function gSave(b,m,d,label,files,done){
+// 傳到一半停掉時記下資料夾和已傳的檔名（存在這台裝置，重新整理也還在）；同一顆按鈕、同一個名稱再按，就接著傳到同一個資料夾，只補沒傳的
+const gRes=k=>{try{return (JSON.parse(localStorage.getItem('yanwu-gres'))||{})[k]}catch(e){}};
+const gResSet=(k,v)=>{try{const o=JSON.parse(localStorage.getItem('yanwu-gres'))||{};if(v)o[k]=v;else delete o[k];localStorage.setItem('yanwu-gres',JSON.stringify(o))}catch(e){}};
+const gWhy=e=>e instanceof TypeError?'網路中斷':e>=500||e===429?'Google 暫時忙碌':e===403?'這個帳號沒有權限存進這個資料夾':String(e);
+let gBusy=0;addEventListener('beforeunload',e=>{if(gBusy){e.preventDefault();e.returnValue='';}});   // 上傳中要離開頁面先問
+// 初驗、複驗共用：b＝按鈕、m＝訊息欄、kind＝哪一顆（接續用）、make(d)＝[要上傳的檔（txt 放最後）, 全部傳完才呼叫的 done]；d＝資料夾時間，txt 用同一個
+async function gSave(b,m,kind,label,make){
   if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
-  b.disabled=true;
+  b.disabled=true;gBusy=1;m.textContent='準備上傳…';let wl=null,files=[];
+  // 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）
+  try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}
   try{
-    const tok=await gToken();let par=gFolder();
-    const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${label}`;
-    m.textContent='建立資料夾…';
-    const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
-    let f;
-    try{f=await mk(par)}catch(e){if(e!==404)throw e;
-      m.textContent=`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`;
-      par=await gPick(tok);f=await mk(par);}
-    for(let i=0;i<files.length;i++){
-      m.textContent=`上傳中 ${i+1}/${files.length}…`;
-      const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:files[i].name,parents:[f.id]})],{type:'application/json'}));fd.append('file',files[i]);
-      await gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);
+    const tok=await gToken();
+    let R=gRes(kind);if(R&&R.label!==label)R=null;
+    const d=R?new Date(R.t):new Date(),[fs,done]=make(d);files=fs;
+    if(!R){
+      let par=gFolder();
+      const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${label}`;
+      m.textContent='建立資料夾…';
+      const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
+      let f;
+      try{f=await mk(par)}catch(e){if(e!==404)throw e;
+        m.textContent=`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`;
+        par=await gPick(tok);f=await mk(par);}
+      R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);
     }
-    done();
-    m.innerHTML=`已存到「${esc(par.name)}／${esc(name)}」，共 ${files.length} 個檔案。<a href="${esc(f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
+    const todo=files.filter(x=>!R.done.includes(x.name));
+    for(const x of todo){
+      m.textContent=`上傳中 ${R.done.length+1}/${files.length}…`;
+      for(let t=1;;t++){   // 網路瞬斷或 Google 忙碌：同一個檔最多再試 2 次
+        try{const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:x.name,parents:[R.f.id]})],{type:'application/json'}));fd.append('file',x);
+          await gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);break;}
+        catch(e){if(t>2||!(e instanceof TypeError||e>=500||e===429))throw e;
+          m.textContent=`網路不穩，重試中（第 ${t} 次）…`;await new Promise(r=>setTimeout(r,1500*t));}
+      }
+      R.done.push(x.name);gResSet(kind,R);
+    }
+    gResSet(kind,null);done();
+    m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」，共 ${files.length} 個檔案。<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
   }catch(e){
     if(e===401)gtok=null;
-    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}
-    m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
-  }finally{b.disabled=false;}
+    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gResSet(kind,null);gShowTo();}
+    const R=gRes(kind);
+    m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':
+      R?`上傳到一半停了（${gWhy(e)}），已傳 ${R.done.length}/${files.length} 個檔；勾選和照片都還在手機上。再按一次會接著傳剩下的。`:`上傳失敗（${gWhy(e)}），勾選和照片都還在手機上，請再按一次。`;
+  }finally{b.disabled=false;gBusy=0;if(wl)wl.release().catch(()=>{});}
 }
 // 進畫面先過兩關才能用：登入 Google（只要登入成功，不查資料夾權限；記在這台裝置）、填我的代號。
 // 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
@@ -728,10 +750,12 @@ $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
   if(!v){$('#g-cmsg').textContent='請先填代號。';return;}
   S.code=v;save();render();gate();};
 $('#g-cin').onkeydown=e=>{if(e.key==='Enter')$('#g-go').click();};
-$('#gup').onclick=()=>{if(gate())return;const d=new Date(),txt=defectText(d),code=S.code.trim();
-  gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
-$('#re-gup').onclick=()=>{if(gate())return;const d=new Date(),txt=reText(d);
-  gSave($('#re-gup'),$('#re-gmsg'),d,[`第${S.rn}次複驗`,S.code.trim(),S.r.unit].filter(Boolean).join(' '),[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt);};
+$('#gup').onclick=()=>{if(gate())return;const code=S.code.trim();
+  gSave($('#gup'),$('#gmsg'),'first','初驗'+(code?' '+code:''),d=>{const txt=defectText(d);
+    return [[...phList(),new File([txt],'驗屋初驗結果.txt',{type:'text/plain'})],()=>$('#outt').value=txt];});};
+$('#re-gup').onclick=()=>{if(gate())return;
+  gSave($('#re-gup'),$('#re-gmsg'),'re',[`第${S.rn}次複驗`,S.code.trim(),S.r.unit].filter(Boolean).join(' '),d=>{const txt=reText(d);
+    return [[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt];});};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -741,7 +765,7 @@ function parseList(txt){
     const l=raw.trim();let m;
     if((m=l.match(/^戶別：(.+)$/))){if(!unit&&m[1]!=='（未填）')unit=m[1];}
     else if((m=l.match(/^【(.+)】$/)))room=m[1];
-    else if((m=l.match(/^([^\s.]{0,3}?\d+)\.\s+(.+)$/)))items.push({no:m[1],room,text:m[2]});
+    else if((m=l.match(/^([^\s.]{0,3}?\d+)\.\s+(.+)$/)))items.push({no:m[1],room,text:m[2].replace(/（照片 \d+ 張）$/,'')});
   }
   return {items,unit};
 }
@@ -780,7 +804,7 @@ function reText(d=new Date()){
 }
 $('#re-load').onclick=()=>loadRe($('#re-in').value);
 $('#re-exp').onclick=()=>{if(!S.r.items.length){$('#re-msg').textContent='先載入缺失項目。';$('#re').scrollIntoView();return;}$('#re-outt').value=reText();copyOut($('#re-outt'),$('#re-outmsg'));};
-$('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受影響。')){S.r=fresh().r;save();$('#re-in').value='';$('#re-outp').hidden=true;$('#re-msg').textContent='';renderRe();}};
+$('#re-clr').onclick=()=>{if(confirm('清除複驗紀錄？初驗的勾選不受影響。')){S.r=fresh().r;save();gResSet('re',null);$('#re-in').value='';$('#re-outp').hidden=true;$('#re-msg').textContent='';renderRe();}};
 function setMode(m){S.mode=m;document.body.dataset.mode=m;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));}
 document.querySelector('.mode').onclick=e=>{const b=e.target.closest('button');if(b){setMode(b.dataset.m);save();window.scrollTo(0,0);}};
 const sty=$('#style');sty.value=document.documentElement.dataset.style||'';
@@ -789,7 +813,7 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();gResSet('first',null);gResSet('re',null);for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
