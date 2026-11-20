@@ -737,7 +737,7 @@ function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`�
 function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
-  $('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」，請先登入 Google。每支手機只要登入一次。`;
+  $('#g-why').textContent=`照片拍完就會存到「${gFolder().name}」，所以要先登入 Google，並確認這個帳號是那個資料夾的編輯者。第一次會跳出選資料夾的視窗，點「${gFolder().name}」就好。每支手機只要做一次。`;
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
 function gToken(){return new Promise((ok,ng)=>{
@@ -746,9 +746,11 @@ function gToken(){return new Promise((ok,ng)=>{
   google.accounts.oauth2.initTokenClient({client_id:GCFG.client,scope:'https://www.googleapis.com/auth/drive.file',
     callback:r=>{clearTimeout(t);if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
     error_callback:e=>{clearTimeout(t);ng(e&&e.type||'popup')}}).requestAccessToken();});}
-function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',{timeout:20000,ontimeout:()=>ng('picker'),onerror:()=>ng('picker'),callback:()=>{   // 網路不穩載不到也要結束，不然佇列會卡住
-  const P=google.picker,v=new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true);
-  new P.PickerBuilder().addView(v).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle('選擇要存放的資料夾')
+// want＝要選的資料夾：第一個分頁只列它（setFileIds），點它就好；第二個分頁是一般的資料夾清單，備用
+function gPick(tok,want){return new Promise((ok,ng)=>gapi.load('picker',{timeout:20000,ontimeout:()=>ng('picker'),onerror:()=>ng('picker'),callback:()=>{   // 網路不穩載不到也要結束，不然佇列會卡住
+  const P=google.picker,fv=()=>new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true),pb=new P.PickerBuilder();
+  const only=fv();if(want&&typeof only.setFileIds==='function')pb.addView(only.setFileIds(want.id));
+  pb.addView(fv()).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle(want?`請點「${want.name}」`:'選擇要存放的資料夾')
     .setCallback(d=>{if(d.action===P.Action.PICKED){const f={id:d.docs[0].id,name:d.docs[0].name};try{localStorage.setItem('yanwu-gfolder',JSON.stringify(f))}catch(e){}gShowTo();ok(f)}
       else if(d.action===P.Action.CANCEL)ng('cancel')}).build().setVisible(true);}}));}
 // 每個 Drive 請求 90 秒沒回完就中止（丟 AbortError，gTry 會重試），不讓一個沒回應的請求卡住整條上傳佇列
@@ -786,7 +788,7 @@ async function gMk(name,tok,say,chk=()=>{}){   // chk：選完資料夾、再建
   const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:gJSON,body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
   try{return {par,f:await mk(par)}}catch(e){if(e!==404)throw e;
     say(`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`);
-    par=await gPick(tok);chk();return {par,f:await mk(par)};}
+    par=await gPick(tok,par);chk();return {par,f:await mk(par)};}
 }
 // 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）。回傳「放掉」
 function gWake(){let wl=null;try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}return ()=>{if(wl)wl.release().catch(()=>{})};}
@@ -887,7 +889,7 @@ const noPh=()=>sections().reduce((a,s)=>a+s.groups.reduce((b,[,items,gk])=>b+ite
 // 進畫面先過兩關才能用：登入 Google（只要登入成功，不查資料夾權限；記在這台裝置）、填我的代號。
 // 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
 function gate(){
-  let ok=null;try{ok=localStorage.getItem('yanwu-gok')}catch(e){}
+  let ok=null;try{ok=localStorage.getItem('yanwu-gok-w')}catch(e){}   // -w：登入且確認過能存進資料夾（第 44 版起；換了 key，舊的「只登入過」的手機要重新確認一次）
   const login=!!GCFG.client&&!ok,code=!S.code.trim();
   $('#g-login').hidden=!login;$('#g-code').hidden=login||!code;$('#gate').hidden=!(login||code);
   if(!login&&code){$('#g-cin').value='';$('#g-cmsg').textContent='';}
@@ -898,11 +900,21 @@ $('#g-in').onclick=async()=>{
   if(!window.google||!google.accounts){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
   b.disabled=true;m.textContent='登入中…';
   try{
-    await gToken();
-    try{localStorage.setItem('yanwu-gok','1')}catch(e){}
+    // 登入後確認這個帳號能存進目標資料夾（Jay 定：沒有編輯權限就不能開始）。沒點過的帳號 drive.file 會回 404 → 在入口跳一次選擇器點它，驗屋途中就不會再跳
+    const tok=await gToken();let par=gFolder();m.textContent='確認雲端資料夾權限…';
+    const can=p=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${p.id}?fields=capabilities(canAddChildren)`,{},tok),t=>m.textContent=t);
+    let r;try{r=await can(par)}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點「${par.name}」。`;par=await gPick(tok,par);r=await can(par);}
+    if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
+    try{localStorage.setItem('yanwu-gok-w','1')}catch(e){}
     gate();gAuto();
   }catch(e){
-    m.textContent=e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
+    if(e===401)gtok=null;
+    const nm=gFolder().name;
+    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${nm}」：請資料夾擁有者把這個帳號加成「編輯者」，加好後再按一次。`:
+      e==='cancel'||e===404?`沒有選到「${nm}」。找不到它，代表這個帳號還沒被分享：請資料夾擁有者把這個帳號加成「編輯者」，加好後再按一次。`:
+      e==='picker'?'Google 選資料夾的視窗載不出來（可能網路不穩），請再按一次。':
+      e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入或確認權限失敗（${gWhy(e)}），請再按一次。`;
+    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}
   }finally{b.disabled=false;}
 };
 $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
