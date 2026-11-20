@@ -108,8 +108,8 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 .sty select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
 .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .hd h2{margin:0}
-#gd{margin-top:8px}
-.row button,.hd button,#gd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+.gd{margin-top:8px}
+.row button,.hd button,.gd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 .ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
@@ -142,6 +142,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <h2>複驗結果</h2>
       <textarea id="re-outt" rows="14" readonly></textarea>
       <p class="sub" id="re-outmsg"></p>
+      <div class="gd" hidden><button type="button" id="re-gup">存到 Google 雲端硬碟</button><p class="sub gto"></p><p class="sub" id="re-gmsg" aria-live="polite"></p></div>
     </section>
   </section>
 
@@ -186,7 +187,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <div class="hd"><h2>缺失項目</h2><span><button type="button" id="cp">複製</button></span></div>
     <textarea id="outt" rows="14" readonly></textarea>
     <p class="sub" id="outmsg"></p>
-    <div id="gd" hidden><button type="button" id="gup">存到 Google 雲端硬碟</button><p class="sub" id="gto"></p><p class="sub" id="gmsg" aria-live="polite"></p></div>
+    <div class="gd" hidden><button type="button" id="gup">存到 Google 雲端硬碟</button><p class="sub gto" id="gto"></p><p class="sub" id="gmsg" aria-live="polite"></p></div>
   </section>
 
   <footer>自驗參考用，不能取代專業驗屋。法規數值以條文原文為準。建立日期：2026-11-04　<a href="privacy.html">隱私權政策與使用條款</a></footer>
@@ -579,17 +580,17 @@ $('#camin').onchange=async()=>{
   const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);
 };
 
-// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」，放初驗結果 .txt＋照片。
+// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 複驗」放複驗結果 .txt。
 // 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡選的資料夾）。預設存到 GDEF（Jay 指定寫死）；
 // 某個 Google 帳號第一次寫不進去（404＝還沒在選擇器點過它）時跳選擇器點一次，之後就直接寫。
 const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleusercontent.com',key:'AIzaSyD1DlPfWDK_CIHWvPiSH3Ps5B4Npa-UkWA',app:'646847553036'};   // ← Google Cloud 專案 xuanjay-house-inspection：OAuth 用戶端 ID、API 金鑰（限 Picker＋Drive API，限本站與 docs.google.com）、專案編號
 const GDEF={id:'1kwqVILFrtsBm2HxXJgSiyDfwUSAb2kVj',name:'雲林驗屋'};
 let gtok=null,gexp=0;
 const gFolder=()=>{try{return JSON.parse(localStorage.getItem('yanwu-gfolder'))||GDEF}catch(e){return GDEF}};
-function gShowTo(){$('#gto').textContent=`存到：${gFolder().name}（按下去會請你登入 Google）`;}
+function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`存到：${gFolder().name}（按下去會請你登入 Google）`);}
 function gInit(){
   if(!GCFG.client)return;
-  $('#gd').hidden=false;gShowTo();
+  document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
 function gToken(){return new Promise((ok,ng)=>{
@@ -605,13 +606,13 @@ function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',()=>{
 async function gApi(url,opt,tok){
   const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+tok},opt.headers||{})}));
   if(!r.ok)throw r.status;return r.json();}
-$('#gup').onclick=async()=>{
-  const m=$('#gmsg'),b=$('#gup');
+// 初驗、複驗共用：b＝按鈕、m＝訊息欄、d＝資料夾時間（和 txt 裡的日期同一個）、files＝要上傳的檔、done＝全部上傳完才呼叫
+async function gSave(b,m,d,label,files,done){
   if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
   b.disabled=true;
   try{
-    const tok=await gToken(),d=new Date(),txt=defectText(d),code=S.code.trim();let par=gFolder();
-    const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} 初驗${code?' '+code:''}`;
+    const tok=await gToken();let par=gFolder();
+    const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${label}`;
     m.textContent='建立資料夾…';
     const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
@@ -619,20 +620,23 @@ $('#gup').onclick=async()=>{
     try{f=await mk(par)}catch(e){if(e!==404)throw e;
       m.textContent=`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`;
       par=await gPick(tok);f=await mk(par);}
-    const files=[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()];
     for(let i=0;i<files.length;i++){
       m.textContent=`上傳中 ${i+1}/${files.length}…`;
       const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:files[i].name,parents:[f.id]})],{type:'application/json'}));fd.append('file',files[i]);
       await gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);
     }
-    $('#outt').value=txt;
+    done();
     m.innerHTML=`已存到「${esc(par.name)}／${esc(name)}」，共 ${files.length} 個檔案。<a href="${esc(f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
   }catch(e){
     if(e===401)gtok=null;
     if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}
     m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
   }finally{b.disabled=false;}
-};
+}
+$('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
+  gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
+$('#re-gup').onclick=()=>{const d=new Date(),txt=reText(d);
+  gSave($('#re-gup'),$('#re-gmsg'),d,'複驗',[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt);};
 
 // 複驗：吃「匯出缺失清單」的文字（可多份合併），逐項標已修(1)／未修(2)
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -672,8 +676,8 @@ function updRe(){
   $('#rsum').innerHTML=n?`已修 ${c[1]} · <b>未修 ${c[2]}</b> · 未查 ${c[0]}`:'尚未載入清單';
   $('#re-exp').hidden=!n;
 }
-function reText(){
-  const d=new Date(),G={0:[],1:[],2:[]};
+function reText(d=new Date()){
+  const G={0:[],1:[],2:[]};
   S.r.items.forEach((x,i)=>{const s=S.r.v[i]||0;G[s].push(`${x.no}. ${x.room?x.room+'｜':''}${x.text}${s===2&&S.r.n[i]?' → 複驗：'+S.r.n[i]:''}`)});
   const sec=(t,a)=>a.length?`【${t}】\n${a.join('\n')}\n\n`:'';
   return `驗屋複驗結果\n${S.r.unit?`戶別：${S.r.unit}\n`:''}複驗日期：${when(d)}\n共 ${S.r.items.length} 項：已修 ${G[1].length}、未修 ${G[2].length}、未查 ${G[0].length}\n\n`+sec('未修',G[2])+sec('未查',G[0])+sec('已修',G[1]);
