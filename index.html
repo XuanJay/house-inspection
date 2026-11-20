@@ -43,8 +43,8 @@ nav a .n{color:var(--bad);margin-left:4px;font-weight:600}
 .fl label{display:flex;align-items:center;gap:4px}
 .cfg .unit{flex:1 1 220px}
 .cfg .unit input{flex:1;min-width:0}
-ol.flow{margin:0;padding-left:1.4em}
-ol.flow li{margin:4px 0}
+.flow{margin:0;padding-left:1.4em}
+.flow li{margin:4px 0}
 summary{cursor:pointer;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;list-style:none;font-weight:700;font-size:1.1rem}
 summary::-webkit-details-marker{display:none}
 summary::before{content:"▸";color:var(--muted);margin-right:6px;font-size:.9rem}
@@ -95,13 +95,18 @@ body.noidb .ph::after{content:"這個瀏覽器存不了照片，重新整理就�
 .mode button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 /* 三個分頁：guide＝操作須知（流程＋攜帶工具）、first＝初驗、re＝複驗 */
 body:not([data-mode="first"]) nav,body:not([data-mode="first"]) #sec-cfg,body:not([data-mode="first"]) #rooms,body:not([data-mode="first"]) #outp,body:not([data-mode="first"]) .m1,
-body:not([data-mode="guide"]) #sec-pack,body:not([data-mode="guide"]) #sec-flow,
+body:not([data-mode="guide"]) #sec-pack,body:not([data-mode="guide"]) #sec-flow,body:not([data-mode="guide"]) #sec-team,
 body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="guide"] .bar{display:none!important}
 #sec-flow>.sub{margin:10px 0 6px}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
-#sec-cfg{--c:var(--c1)}#sec-pack{--c:var(--c2)}#sec-flow{--c:var(--c3)}#outp{--c:var(--c4)}
-#sec-cfg,#sec-pack,#sec-flow,#outp{border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
-#sec-cfg>summary::before,#sec-pack>summary::before,#sec-flow>summary::before{color:var(--c)}
+#sec-cfg{--c:var(--c1)}#sec-pack{--c:var(--c2)}#sec-flow{--c:var(--c3)}#outp,#sec-team{--c:var(--c4)}
+#sec-cfg,#sec-pack,#sec-flow,#sec-team,#outp{border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
+#sec-cfg>summary::before,#sec-pack>summary::before,#sec-flow>summary::before,#sec-team>summary::before{color:var(--c)}
+#gate{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px}
+#gate .card{max-width:480px;margin:10vh auto 0}
+#gate button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+#gate #g-in{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
+#gate #g-skip{border:0;background:none;color:var(--muted);text-decoration:underline;padding:8px 0;font-size:.85rem}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
 .sty{display:flex;align-items:center;gap:4px;font-size:.85rem;color:var(--muted);white-space:nowrap}
@@ -118,6 +123,13 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 </style>
 </head>
 <body>
+<div id="gate" hidden><div class="card">
+  <h2>先登入 Google</h2>
+  <p class="sub" id="g-why"></p>
+  <button type="button" id="g-in">登入 Google</button>
+  <p class="sub" id="g-msg" aria-live="polite"></p>
+  <button type="button" id="g-skip">先略過（之後存不上雲端硬碟）</button>
+</div></div>
 <header>
   <div class="top"><h1>新成屋驗屋檢查表</h1>
     <label class="sty"><select id="style" aria-label="風格">
@@ -150,13 +162,18 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <details class="sec" id="sec-cfg">
     <summary><span class="t">基本設定</span><span class="prog" id="cfg-sum"></span></summary>
     <div class="cfg">
-      <label>樓層 <input type="number" min="1" max="6" data-fl> 層</label>
+      <label class="nofix">樓層 <input type="number" min="1" max="6" data-fl> 層</label>
       <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
       <label class="unit" hidden>戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
     </div>
-    <div id="floors"></div>
+    <div class="cfg" id="who">我負責
+      <label><input type="checkbox" value="A">A 量測＋門窗</label><label><input type="checkbox" value="B">B 敲＋看表面</label>
+      <label><input type="checkbox" value="E">C 大電</label><label><input type="checkbox" value="L">C 弱電</label><label><input type="checkbox" value="W">C 水</label>
+    </div>
+    <div id="floors" class="nofix"></div>
     <ul class="sub cfgnote">
-      <li><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。</li>
+      <li><b>我負責</b>：多人分工時勾自己負責的範圍，下面只列出那些項目（分法見「操作須知」的「多人分工與順序」）；都不勾就全部列出。匯出時照樣包含你按過 ✗ 的每一項。</li>
+      <li class="nofix"><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。</li>
       <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號。一個人驗可以不填。</li>
       <li hidden><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
     </ul>
@@ -168,11 +185,34 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <ol class="flow">
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
-      <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。</li>
+      <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。浴室的地磚、壁磚要先用驗屋錘敲過再蓄水，水放下去就敲不到了。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
       <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在「初驗」分頁最上面的「基本設定」各填不同的代號。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
       <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目底下的「存到 Google 雲端硬碟」，會跟缺失清單一起存；照片只存在這支手機，當天就要存。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+    </ol>
+  </details>
+
+  <details class="sec" id="sec-team">
+    <summary><span class="t">多人分工與順序</span></summary>
+    <p class="sub">工具只有一套時，按工具分工，不要按樓層分：每人帶自己那幾樣走完全部空間，同一類問題也由同一個人判斷，標準比較一致。每支手機在「初驗」→「基本設定」填不同的代號，再勾「我負責」，表上就只列出自己的項目。</p>
+    <ul class="flow">
+      <li><b>A 量測＋門窗</b>：雷射水平儀＋腳架、雷射測距儀、捲尺、水平尺。地坪平整與全戶高低差、牆面垂直、門、窗、大門、窗台與欄杆高度。</li>
+      <li><b>B 敲＋看表面</b>：驗屋錘兩支、工作燈、手電筒。磁磚空心（含浴室、廚房、陽台、樓梯）、油漆與裂縫、天花板、櫃體與台面。</li>
+      <li><b>C 大電</b>：插座測試器、驗電插頭、電表、E27 燈泡。插座與開關、冷氣插座、配電箱、排油煙機和熱水器等用電設備。</li>
+      <li><b>C 弱電</b>：網路測線儀＋網路線。弱電箱、各房網路孔、電視牆、對講機。</li>
+      <li><b>C 水</b>：水桶、彈珠、寬版膠帶、衛生紙、抹布、內視鏡、熱像儀、梯子、螺絲起子。所有放水、排水、蓄水、淋水測試，衛浴設備，浴室天花板維修孔。</li>
+    </ul>
+    <p class="sub">只有三個人時：一人 A、一人 B，第三人把 C 的三項都勾。每個人都帶紙膠帶（一人一色）、油性筆和充飽電的手機。</p>
+    <h3 class="g">順序</h3>
+    <ol class="flow">
+      <li>開場：C 大電到配電箱確認都有送電，C 水確認水已經開；每支手機設好代號和「我負責」。</li>
+      <li>A 先在客廳中間架雷射量全戶高低差。量完之前腳架不能碰：B 拖驗屋錘、C 水提水桶都要繞開，等 A 喊「量完了」。</li>
+      <li>B 先敲各間浴室和陽台的地磚、壁磚，敲完通知 C 水。C 水在那之前先做廚房（水槽放水、下櫃管線）和窗的軌道排水，收到通知才去浴室、陽台封地排蓄水、倒水看坡度。</li>
+      <li>C 大電把配電箱「一次關一個迴路」放到最後做：插座會斷電，關之前喊一聲。順便做配電箱的「最後再看一次」。</li>
+      <li>C 水最後回浴室看蓄水水位，用熱像儀掃隔壁牆面和門外地面。</li>
+      <li>看到不是自己範圍的缺失：叫負責的人來記，不要自己記，不然合併的清單會重複。</li>
+      <li>結束：每支手機各自按「匯出缺失清單」→「存到 Google 雲端硬碟」。照片只存在拍的那支手機，當天就要存。</li>
     </ol>
   </details>
 
@@ -412,12 +452,25 @@ const DEF={
 };
 DEF.lounge={t:'客廳',common:ROOMCOMMON,spec:[['設備',DEF.living.spec[1][1].filter(x=>['電視牆','落地窗'].includes(x[0]))]]};
 
+// 多人分工（「我負責」）：A 量測＋門窗、B 敲＋看表面、E＝C 大電、L＝C 弱電、W＝C 水。先看項目名稱（RT），沒有再看所在組別（RG）
+const WHO={A:'A 量測＋門窗',B:'B 敲＋看表面',E:'C 大電',L:'C 弱電',W:'C 水'};
+const RG={地坪:'B',牆面:'B',天花板:'B',門:'A',窗:'A',插座與開關:'E',冷氣:'E',大門:'A',設備:'E',臥室專屬:'A',台面與水槽:'W',櫃體:'B',
+  地面與牆:'W',衛浴設備:'W',排水:'W',欄杆與外牆:'A',先看:'E',實測:'E',弱電箱:'L',樓梯:'B',排水與防水:'W',女兒牆與設備:'A'};
+const RT={地坪平整:'A',牆面平整與垂直:'A',軌道排水:'W','淋水測試（做得到時）':'W',位置與數量:'EL',排水管:'W',對講機:'L',電視牆:'L',落地窗:'A',玄關:'B',
+  '淨水器（若有附）':'W','洗碗機／烘碗機（若有附）':'W',洗衣機位置:'W','曬衣架（若有）':'B','洗衣槽（若有）':'W',床頭插座與開關:'E','衣櫃（若有附）':'B',
+  流理台台面:'B',地磚與壁磚空心:'B','抽風機／暖風機':'E','鏡子、鏡櫃、毛巾架':'B','浴櫃（若有）':'B',維修孔:'W',抽風機風管:'W',天花板內管線:'W',制水閥:'W',
+  地磚與外牆磚:'B',金屬件鏽斑:'B',扶手:'A',樓梯燈:'E',地面:'B','水塔（若有）':'W'};
+const role=(g,t)=>RT[t]||RG[g];
+// 現場算好的樓層與間數，例如 {n:2,f:[{liv:1,bed:3,bath:2,balc:1},{liv:0,bed:2,bath:1,balc:1}]}；設了就照這個、藏起樓層設定（null＝讓人自己填）
+const FIX=null;
+
 const KEY='yanwu-checklist-v1';
 // c.n＝樓層數；c.f[k]＝第 k+1 層的 {liv 客廳, bed 臥室, bath 浴室, balc 陽台}（f 可比 n 長，減層再加回來時數量還在）
-const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:'',code:'',num:{},seq:0,mode:'first',rn:1,r:{items:[],v:{},n:{},unit:''}});
+const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:'',code:'',who:'',num:{},seq:0,mode:'first',rn:1,r:{items:[],v:{},n:{},unit:''}});
 let S=fresh();
 try{const o=JSON.parse(localStorage.getItem(KEY));if(o){S=Object.assign(fresh(),o);
   const c=o.c||{};S.c=c.f?c:{n:1,f:[{liv:1,bed:c.bed||3,bath:c.bath||2,balc:c.balc||1}]};}}catch(e){}   // 舊格式 {bed,bath,balc} → 1 層
+if(FIX)S.c=JSON.parse(JSON.stringify(FIX));
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 for(const k in S.v)if(S.v[k]===2&&!S.num[k])S.num[k]=++S.seq;
 const tag=k=>S.code.trim()+S.num[k];
@@ -445,16 +498,19 @@ function sections(){
   return L;
 }
 const k3=(sid,gk,i)=>sid+'|'+gk+'|'+i;
+// 畫面和進度只算「我負責」的項目，每項帶原本的序號 i（key 用它）；匯出、照片仍用 sections() 看全部
+const mine=(g,t)=>!S.who||[...role(g,t)].some(r=>S.who.includes(r));
+const shown=()=>sections().map(s=>({...s,groups:s.groups.map(([gn,items,gk,c])=>[gn,items.map(([t,h],i)=>[t,h,i]).filter(([t])=>mine(gn,t)),gk,c]).filter(g=>g[1].length)})).filter(s=>s.groups.length);
 
 function render(){
   $('#pack').innerHTML=PACK.map(([g,items])=>`<h3 class="g">${g}</h3>`+items.map(([t,h],i)=>
     `<label class="pk"><input type="checkbox" data-p="${g}|${i}"><span><b>${t}</b><span class="hint">${h}</span></span></label>`).join('')).join('');
   document.querySelectorAll('[data-p]').forEach(x=>x.checked=!!S.p[x.dataset.p]);
-  const secs=sections();
+  const secs=shown();
   const open=new Set([...document.querySelectorAll('#rooms details[open]')].map(d=>d.id));
   $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}"${open.has('sec-'+s.id)?' open':''}><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span><span class="pbar" data-bar="${s.id}" role="progressbar" aria-label="${s.t} 進度" aria-valuemin="0"></span></summary>`+
     (s.note?`<p class="secnote">${s.note}</p>`:'')+
-    s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h],i)=>
+    s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h,i])=>
       `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"><div class="ph"><button type="button" class="cam">📷 拍照</button></div></div>`).join('')).join('')+
     `</details>`).join('');
   document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
@@ -466,6 +522,7 @@ function render(){
     [['liv','客廳',3],['bed','臥室',6],['bath','浴室',6],['balc','陽台',6]].map(([r,t,mx])=>`<label>${t} <input type="number" min="0" max="${mx}" data-f="${k}" data-rm="${r}" value="${f[r]}"></label>`).join('')+'</div>').join('');
   $('#unit').value=S.unit;
   $('#code').value=S.code;
+  document.querySelectorAll('#who input').forEach(x=>x.checked=S.who.includes(x.value));
   update();
 }
 function setState(it,s){
@@ -481,9 +538,9 @@ function fill(el,done,b,n){
 }
 function update(){
   let bad=0,N=0,D=0;
-  for(const s of sections()){
+  for(const s of shown()){
     let n=0,done=0,b=0;
-    s.groups.forEach(([,items,gk])=>items.forEach((_,i)=>{n++;const v=S.v[k3(s.id,gk,i)];if(v)done++;if(v===2)b++}));
+    s.groups.forEach(([,items,gk])=>items.forEach(([,,i])=>{n++;const v=S.v[k3(s.id,gk,i)];if(v)done++;if(v===2)b++}));
     bad+=b;N+=n;D+=done;
     const p=document.querySelector(`[data-prog="${s.id}"]`);
     if(p)p.innerHTML=`${done}/${n}`+(b?` · <span class="b">缺失 ${b}</span>`:'');
@@ -496,7 +553,7 @@ function update(){
   $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`;
   $('#tot-t').textContent=`總進度 ${D}/${N} · ${Math.round(D/N*100)}%`;
   const fs=S.c.f.slice(0,S.c.n),sum=r=>fs.reduce((a,f)=>a+f[r],0);
-  $('#cfg-sum').textContent=(S.c.n>1?`${S.c.n} 層 · `:'')+`${sum('bed')} 臥 · ${sum('bath')} 衛 · ${sum('balc')} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'');
+  $('#cfg-sum').textContent=(S.c.n>1?`${S.c.n} 層 · `:'')+`${sum('bed')} 臥 · ${sum('bath')} 衛 · ${sum('balc')} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'')+(S.who?' · 負責 '+[...S.who].map(r=>WHO[r][0]==='C'?WHO[r].replace(' ',''):r).join('、'):'');
   fill($('#tot-bar'),D,bad,N);
 }
 
@@ -520,6 +577,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset.p){if(t.checked)S.p[t.dataset.p]=1;else delete S.p[t.dataset.p];save();update();}
+  else if(t.closest('#who')){S.who=[...document.querySelectorAll('#who input:checked')].map(x=>x.value).join('');save();render();}
   else if(t.dataset.fl!==undefined){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c.n=v;while(S.c.f.length<v)S.c.f.push({liv:0,bed:2,bath:1,balc:1});save();render();}
   else if(t.dataset.rm){const mx=+t.max,v=Math.max(0,Math.min(mx,parseInt(t.value,10)||0));S.c.f[+t.dataset.f][t.dataset.rm]=v;t.value=v;save();render();}
 });
@@ -593,6 +651,8 @@ function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`�
 function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
+  let ok=null;try{ok=localStorage.getItem('yanwu-gok')}catch(e){}
+  if(!ok){$('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」。先登入，確認這個帳號存得進去；每支手機只要登入一次。`;$('#gate').hidden=false;}
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
 function gToken(){return new Promise((ok,ng)=>{
@@ -635,6 +695,24 @@ async function gSave(b,m,d,label,files,done){
     m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
   }finally{b.disabled=false;}
 }
+// 進畫面先登入：取得權杖、確認這個帳號能在資料夾裡新增東西（沒點過的帳號 404 → 選擇器點一次）。成功記在這台裝置，之後不再擋
+$('#g-in').onclick=async()=>{
+  const b=$('#g-in'),m=$('#g-msg');
+  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
+  b.disabled=true;m.textContent='登入中…';
+  try{
+    const tok=await gToken();let par=gFolder();
+    const can=p=>gApi(`https://www.googleapis.com/drive/v3/files/${p.id}?fields=capabilities(canAddChildren)`,{},tok);
+    let r;try{r=await can(par)}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點一次「${par.name}」。`;par=await gPick(tok);r=await can(par);}
+    if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
+    try{localStorage.setItem('yanwu-gok','1')}catch(e){}
+    $('#gate').hidden=true;
+  }catch(e){
+    if(e===401)gtok=null;
+    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${gFolder().name}」：請資料夾擁有者把你加成「編輯者」，再按一次。`:e==='cancel'?`沒有選資料夾，請再按一次。找不到「${gFolder().name}」的話，請資料夾擁有者先把你加成「編輯者」。`:e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
+  }finally{b.disabled=false;}
+};
+$('#g-skip').onclick=()=>$('#gate').hidden=true;
 $('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
   gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
 $('#re-gup').onclick=()=>{const d=new Date(),txt=reText(d);
@@ -696,10 +774,11 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code});save();for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
+if(FIX)document.querySelectorAll('.nofix').forEach(e=>e.hidden=true);
 gInit();
 setMode(['guide','re'].includes(S.mode)?S.mode:'first');
 </script>
