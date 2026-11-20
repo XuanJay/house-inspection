@@ -732,7 +732,7 @@ $('#camin').onchange=async()=>{
 const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleusercontent.com',key:'AIzaSyD1DlPfWDK_CIHWvPiSH3Ps5B4Npa-UkWA',app:'646847553036'};   // ← Google Cloud 專案 xuanjay-house-inspection：OAuth 用戶端 ID、API 金鑰（限 Picker＋Drive API，限本站與 docs.google.com）、專案編號
 const GDEF={id:'1kwqVILFrtsBm2HxXJgSiyDfwUSAb2kVj',name:'雲林驗屋'};
 let gtok=null,gexp=0;
-const gFolder=()=>{try{return JSON.parse(localStorage.getItem('yanwu-gfolder'))||GDEF}catch(e){return GDEF}};
+const gFolder=()=>GDEF;   // 一律存到寫死的 GDEF（第 45 版起不再記住選擇器選的別的資料夾，免得照片傳到錯的地方）
 function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`存到：${gFolder().name}（如果跳出 Google 視窗，選你登入的帳號）`);}   // 進畫面時已登入；權杖只在記憶體、約 1 小時，存檔時可能再跳一次
 function gInit(){
   if(!GCFG.client)return;
@@ -740,19 +740,28 @@ function gInit(){
   $('#g-why').textContent=`照片拍完就會存到「${gFolder().name}」，所以要先登入 Google，並確認這個帳號是那個資料夾的編輯者。第一次會跳出選資料夾的視窗，點「${gFolder().name}」就好。每支手機只要做一次。`;
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
-function gToken(){return new Promise((ok,ng)=>{
-  if(gtok&&Date.now()<gexp)return ok(gtok);
-  const t=setTimeout(()=>ng('popup'),120000);   // 視窗被擋又沒有任何回呼時，不要讓上傳佇列永遠等
+let gGateFail=0;
+function gToken(pick){return new Promise((ok,ng)=>{   // pick：讓使用者重選帳號（入口沒過、可能登錯帳號時）
+  if(!pick&&gtok&&Date.now()<gexp)return ok(gtok);
+  // 視窗被擋又沒有任何回呼時，不要讓上傳佇列永遠等；逾時之後才到的回呼一律不理（不然可能把後來重登的帳號換回舊的）
+  let late=0;const t=setTimeout(()=>{late=1;ng('popup')},gTokMs);
   google.accounts.oauth2.initTokenClient({client_id:GCFG.client,scope:'https://www.googleapis.com/auth/drive.file',
-    callback:r=>{clearTimeout(t);if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
-    error_callback:e=>{clearTimeout(t);ng(e&&e.type||'popup')}}).requestAccessToken();});}
-// want＝要選的資料夾：第一個分頁只列它（setFileIds），點它就好；第二個分頁是一般的資料夾清單，備用
+    callback:r=>{if(late)return;clearTimeout(t);if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
+    error_callback:e=>{if(late)return;clearTimeout(t);ng(e&&e.type||'popup')}}).requestAccessToken(pick?{prompt:'select_account'}:undefined);});}
+let gTokMs=120000;
+// 讓這個帳號在選擇器裡點一次 want（drive.file 要點過才能寫）。第一個分頁只列它（setFileIds），第二個分頁是一般清單備用；
+// 點到別的資料夾不算（丟 'wrong'，不會改存放位置）。選擇器報錯、或 3 分鐘都沒結果，丟 'picker'，入口按鈕才能再按
 function gPick(tok,want){return new Promise((ok,ng)=>gapi.load('picker',{timeout:20000,ontimeout:()=>ng('picker'),onerror:()=>ng('picker'),callback:()=>{   // 網路不穩載不到也要結束，不然佇列會卡住
   const P=google.picker,fv=()=>new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true),pb=new P.PickerBuilder();
-  const only=fv();if(want&&typeof only.setFileIds==='function')pb.addView(only.setFileIds(want.id));
-  pb.addView(fv()).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle(want?`請點「${want.name}」`:'選擇要存放的資料夾')
-    .setCallback(d=>{if(d.action===P.Action.PICKED){const f={id:d.docs[0].id,name:d.docs[0].name};try{localStorage.setItem('yanwu-gfolder',JSON.stringify(f))}catch(e){}gShowTo();ok(f)}
-      else if(d.action===P.Action.CANCEL)ng('cancel')}).build().setVisible(true);}}));}
+  const only=fv();if(typeof only.setFileIds==='function')pb.addView(only.setFileIds(want.id));
+  let pk=null;const t=setTimeout(()=>{try{pk.setVisible(false);pk.dispose()}catch(e){}ng('picker')},gPickMs);   // 逾時也把選擇視窗關掉，不然蓋住頁面按不到
+  pk=pb.addView(fv()).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle(`請點「${want.name}」`)
+    .setCallback(d=>{
+      if(d.action===P.Action.PICKED){clearTimeout(t);if(d.docs[0].id===want.id)ok(want);else ng('wrong');}
+      else if(d.action===P.Action.CANCEL){clearTimeout(t);ng('cancel');}
+      else if(P.Action.ERROR&&d.action===P.Action.ERROR){clearTimeout(t);ng('picker');}}).build();
+  pk.setVisible(true);}}));}
+let gPickMs=180000;
 // 每個 Drive 請求 90 秒沒回完就中止（丟 AbortError，gTry 會重試），不讓一個沒回應的請求卡住整條上傳佇列
 async function gApi(url,opt,tok){
   const ac=new AbortController(),t=setTimeout(()=>ac.abort(),90000);
@@ -765,7 +774,9 @@ const gNet=e=>e instanceof TypeError||(e&&e.name==='AbortError');   // 網路斷
 //   re＝複驗傳到一半時記的 {label,t,f,par,name,done:[檔名]}，再按就接著傳
 const gRes=k=>{try{return (JSON.parse(localStorage.getItem('yanwu-gres'))||{})[k]}catch(e){}};
 const gResSet=(k,v)=>{try{const o=JSON.parse(localStorage.getItem('yanwu-gres'))||{};if(v)o[k]=v;else delete o[k];localStorage.setItem('yanwu-gres',JSON.stringify(o))}catch(e){}};
-const gFirst=()=>{const R=gRes('first');return R&&R.up?R:null};   // 第 42 版留下的「傳到一半」（只有 done、沒有 up）不認，當作還沒開始
+// 第 42 版留下的「傳到一半」（只有 done、沒有 up）不認；舊版選過別的資料夾、資料夾不在 GDEF 底下的紀錄也不認（免得照片傳到舊地方），當作還沒開始
+const gHome=R=>!R.par||R.par.id===GDEF.id;
+const gFirst=()=>{const R=gRes('first');return R&&R.up&&gHome(R)?R:null};
 const gWhy=e=>e&&e.name==='AbortError'?'網路太慢，逾時':e instanceof TypeError?'網路中斷':e>=500||e===429?'Google 暫時忙碌':e===403?'這個帳號沒有權限存進這個資料夾':String(e);
 let gBusy=0,gLeave=0,gGen=0,gStale=0;addEventListener('beforeunload',e=>{if(gBusy&&!gLeave){e.preventDefault();e.returnValue='';}});   // 上傳中要離開頁面先問
 // 同一支手機只讓一個分頁在用（兩個分頁同時寫，勾選和照片會互相蓋掉，也可能把對方剛傳的照片當成要丟的）：
@@ -794,11 +805,14 @@ async function gMk(name,tok,say,chk=()=>{}){   // chk：選完資料夾、再建
 function gWake(){let wl=null;try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}return ()=>{if(wl)wl.release().catch(()=>{})};}
 function gFail(e,kind){
   if(e===401)gtok=null;
-  if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gResSet(kind,null);gShowTo();}
+  if(e===404)gResSet(kind,null);
+  // 403／404：可能權限被拿掉或換了沒權限的帳號（403 也可能只是 Google 限速）→ 只記「下次打開網頁時入口重新確認」，不在驗屋途中擋人
+  if(e===403||e===404)try{localStorage.setItem('yanwu-recheck','1')}catch(x){}
   if(e==='reset')return '已按清除，這次上傳停止了。';
   if(e==='stale')return '這個網頁在另一個分頁開著，這一頁已停用。';
   if(e==='idb')return '手機上的照片還沒讀完，等幾秒再按一次。';
   if(e==='picker')return 'Google 選資料夾的視窗載不出來（可能網路不穩），請再按一次。';
+  if(e==='wrong')return `選到的不是「${gFolder().name}」，請再按一次並點「${gFolder().name}」（第一個分頁沒有的話，到其他分頁或用搜尋找）。`;
   return e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到雲端上的資料夾（可能被刪或沒權限），下次會重新建一個。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':
     `上傳到一半停了（${gWhy(e)}）；勾選和照片都還在手機上，再按一次會接著傳剩下的。`;
 }
@@ -809,7 +823,7 @@ async function gSave(b,m,kind,label,make){
   b.disabled=true;gBusy++;m.textContent='準備上傳…';const unwake=gWake(),say=t=>m.textContent=t;
   try{
     const tok=await tp;
-    let R=gRes(kind);if(R&&R.label!==label)R=null;
+    let R=gRes(kind);if(R&&(R.label!==label||!gHome(R)))R=null;
     const d=R?new Date(R.t):new Date(),[files,done]=make(d);
     if(!R){const name=`${gStamp(d)} ${label}`;say('建立資料夾…');const {par,f}=await gMk(name,tok,say);R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);}
     for(const x of files.filter(x=>!R.done.includes(x.name))){
@@ -901,20 +915,20 @@ $('#g-in').onclick=async()=>{
   b.disabled=true;m.textContent='登入中…';
   try{
     // 登入後確認這個帳號能存進目標資料夾（Jay 定：沒有編輯權限就不能開始）。沒點過的帳號 drive.file 會回 404 → 在入口跳一次選擇器點它，驗屋途中就不會再跳
-    const tok=await gToken();let par=gFolder();m.textContent='確認雲端資料夾權限…';
-    const can=p=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${p.id}?fields=capabilities(canAddChildren)`,{},tok),t=>m.textContent=t);
-    let r;try{r=await can(par)}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點「${par.name}」。`;par=await gPick(tok,par);r=await can(par);}
+    const tok=await gToken(gGateFail);const par=gFolder();m.textContent='確認雲端資料夾權限…';   // 上次沒過就讓他重選帳號（可能登錯帳號）
+    const can=()=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${par.id}?fields=capabilities(canAddChildren)`,{},tok),t=>m.textContent=t);
+    let r;try{r=await can()}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點「${par.name}」。`;await gPick(tok,par);r=await can();}
     if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
     try{localStorage.setItem('yanwu-gok-w','1')}catch(e){}
-    gate();gAuto();
+    gGateFail=0;gate();gAuto();
   }catch(e){
-    if(e===401)gtok=null;
-    const nm=gFolder().name;
-    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${nm}」：請資料夾擁有者把這個帳號加成「編輯者」，加好後再按一次。`:
-      e==='cancel'||e===404?`沒有選到「${nm}」。找不到它，代表這個帳號還沒被分享：請資料夾擁有者把這個帳號加成「編輯者」，加好後再按一次。`:
-      e==='picker'?'Google 選資料夾的視窗載不出來（可能網路不穩），請再按一次。':
+    gtok=null;gGateFail=1;   // 下次按：重新登入並可換帳號
+    const nm=gFolder().name,why=`可能是①登入的不是申請權限的那個帳號（再按一次登入會讓你重選帳號），或②這個帳號還沒被加成「${nm}」的編輯者（請資料夾擁有者加好後再按一次）。`;
+    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${nm}」。${why}`:
+      e==='cancel'||e===404?`沒有選到「${nm}」。如果選擇視窗裡找不到它，${why}`:
+      e==='wrong'?`選到的不是「${nm}」。請再按一次，點「${nm}」（第一個分頁沒有的話，到其他分頁或用搜尋找「${nm}」）。都找不到的話，${why}`:
+      e==='picker'?'Google 選資料夾的視窗載不出來或出錯（可能網路不穩），請再按一次。':
       e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入或確認權限失敗（${gWhy(e)}），請再按一次。`;
-    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gShowTo();}
   }finally{b.disabled=false;}
 };
 $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
@@ -996,6 +1010,7 @@ $('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗
 render();
 renderRe();
 if(FIX)document.querySelectorAll('.nofix').forEach(e=>e.hidden=true);
+try{if(localStorage.getItem('yanwu-recheck')){localStorage.removeItem('yanwu-recheck');localStorage.removeItem('yanwu-gok-w');}}catch(e){}   // 上次上傳遇過 403／404：這次打開入口重新確認權限
 gInit();
 gate();
 setMode(['guide','re'].includes(S.mode)?S.mode:'first');
