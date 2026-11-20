@@ -105,9 +105,7 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px}
 #gate .card{max-width:480px;margin:10vh auto 0}
 #gate button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
-#gate #g-in{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
-#gate #g-skip{border:0;background:none;color:var(--muted);text-decoration:underline;padding:8px 0;font-size:.85rem}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+#gate #g-in{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
 .sty{display:flex;align-items:center;gap:4px;font-size:.85rem;color:var(--muted);white-space:nowrap}
 .sty select{font:inherit;font-size:.9rem;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
@@ -128,7 +126,6 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <p class="sub" id="g-why"></p>
   <button type="button" id="g-in">登入 Google</button>
   <p class="sub" id="g-msg" aria-live="polite"></p>
-  <button type="button" id="g-skip">先略過（之後存不上雲端硬碟）</button>
 </div></div>
 <header>
   <div class="top"><h1>新成屋驗屋檢查表</h1>
@@ -712,7 +709,6 @@ $('#g-in').onclick=async()=>{
     m.textContent=e==='ro'?`這個帳號只能看、不能存進「${gFolder().name}」：請資料夾擁有者把你加成「編輯者」，再按一次。`:e==='cancel'?`沒有選資料夾，請再按一次。找不到「${gFolder().name}」的話，請資料夾擁有者先把你加成「編輯者」。`:e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
   }finally{b.disabled=false;}
 };
-$('#g-skip').onclick=()=>$('#gate').hidden=true;
 $('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
   gSave($('#gup'),$('#gmsg'),d,'初驗'+(code?' '+code:''),[new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),...phList()],()=>$('#outt').value=txt);};
 $('#re-gup').onclick=()=>{const d=new Date(),txt=reText(d);
