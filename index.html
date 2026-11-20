@@ -72,6 +72,13 @@ h3.g .c{color:var(--muted);font-weight:400;font-size:.8rem;margin-left:6px}
 .item[data-s="1"] b{color:var(--muted);font-weight:500}
 .note{grid-column:1/-1;display:none;width:100%;font:inherit;font-size:.92rem;padding:6px 8px;border:1px solid var(--bad);border-radius:6px;background:var(--note);color:var(--fg)}
 .item[data-s="2"] .note{display:block}
+#rooms .item[data-s="1"] .note{display:block;border-color:var(--line)}
+.item.noph .ph::before{content:"還沒拍照";order:9;color:var(--bad);font-size:.85rem;font-weight:600}
+.item.noph .cam{border-color:var(--bad);color:var(--bad)}
+.nophs{color:var(--bad);font-size:.85rem}
+.oc{font-weight:400;color:var(--fg);margin-left:8px;font-size:.9rem;letter-spacing:0}
+.oc input{width:3.4em;font:inherit;padding:2px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+#toast{position:fixed;left:16px;right:16px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:7;max-width:728px;margin:0 auto;padding:8px 12px;border-radius:8px;background:var(--fg);color:var(--bg);font-size:.88rem;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .ph{grid-column:1/-1;display:none;flex-wrap:wrap;gap:6px;align-items:center}
 .item[data-s="1"] .ph,.item[data-s="2"] .ph{display:flex}
 .ph img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer}
@@ -102,10 +109,11 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 #sec-cfg{--c:var(--c1)}#sec-pack{--c:var(--c2)}#sec-flow{--c:var(--c3)}#outp,#sec-team{--c:var(--c4)}
 #sec-cfg,#sec-pack,#sec-flow,#sec-team,#outp{border-left:5px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
 #sec-cfg>summary::before,#sec-pack>summary::before,#sec-flow>summary::before,#sec-team>summary::before{color:var(--c)}
-#gate{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px}
-#gate .card{max-width:480px;margin:10vh auto 0}
-#gate button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
-#gate #g-in,#gate #g-go{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
+#gate,#other{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;padding:16px}
+#other{z-index:60}
+#gate .card,#other .card{max-width:480px;margin:10vh auto 0}
+#gate button,#other button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
+#gate #g-in,#gate #g-go,#other #o-use{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
 #gate input{font:inherit;width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
@@ -119,7 +127,7 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
 #re-outp{margin-top:16px}
 footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
-@media print{nav,.bar,.pbar,.sty,.cam,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
+@media print{#toast,nav,.bar,.pbar,.sty,.cam,#sec-cfg,#outp,.mode,#re .row,#re-in,#re-outp{display:none!important}body{padding:0;background:#fff;color:#000}.card,.sec{border:none;padding:0}.note{border:none;background:none}}
 </style>
 </head>
 <body>
@@ -137,6 +145,12 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <button type="button" id="g-go">開始</button>
     <p class="sub" id="g-cmsg" aria-live="polite"></p>
   </div>
+</div></div>
+<div id="other" hidden><div class="card">
+  <h2>這個網頁在另一個分頁開著</h2>
+  <p class="sub">同時用兩個分頁，勾選和照片會互相蓋掉，所以這一頁先停用了。請回到另一個分頁繼續；或按下面的按鈕改用這一頁（另一個分頁就會停用）。</p>
+  <p class="sub" id="o-lost" hidden><b>剛拍的那張照片沒有存進去</b>，請在使用中的分頁重拍一次。</p>
+  <button type="button" id="o-use">改用這一頁</button>
 </div></div>
 <header>
   <div class="top"><h1>新成屋驗屋檢查表</h1>
@@ -195,9 +209,9 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。浴室的地磚、壁磚要先用驗屋錘敲過再蓄水，水放下去就敲不到了。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
-      <li>遇到缺失：本表按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 按該項的「📷 拍照」拍一張遠景（看得出位置）和一張近景 → 備註寫位置與狀況。兩個人分工時，先在「初驗」分頁最上面的「基本設定」各填不同的代號。</li>
+      <li>每一項都要拍照，合格的也要：按 ✓ 或 ✗ 會直接開相機；還沒拍的項目會標「還沒拍照」，底下也會顯示幾項沒拍。遇到缺失：按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置），再按「📷 拍照」補一張近景 → 備註寫位置與狀況。合格的也可以寫備註，例如位置、量到的數值。插座先在「插座」那組填這間有幾個，再一個一個測。表上沒有、但要記的東西，用每個區塊最後的「補充」：填數量，再逐項寫備註、拍照。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
-      <li>走完按下方「匯出缺失清單」，整理後交給建商簽收，並約好複驗日期。照片按缺失項目底下的「存到 Google 雲端硬碟」，會跟缺失清單一起存；照片只存在這支手機，當天就要存。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+      <li>照片拍完就會自動上傳到雲端硬碟。登入超過大約一小時，或重新整理過頁面，要按底下的「☁ 待傳」才會繼續傳（會跳一次 Google 視窗）。走完按「匯出缺失清單」，再按「存到 Google 雲端硬碟」，把缺失清單存進同一個資料夾；看到「已存到」、底下也沒有「☁ 待傳」才算全部傳完。清單交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
   </details>
 
@@ -207,7 +221,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <ul class="flow">
       <li><b>A 量測＋門窗</b>：雷射水平儀＋腳架、雷射測距儀、捲尺、水平尺。地坪平整與全戶高低差、牆面垂直、門、窗、大門、窗台與欄杆高度。</li>
       <li><b>B 敲＋看表面</b>：驗屋錘兩支、工作燈、手電筒。磁磚空心（含浴室、廚房、陽台、樓梯）、油漆與裂縫、天花板、櫃體與台面。</li>
-      <li><b>C 大電</b>：插座測試器、驗電插頭、電表、E27 燈泡。插座與開關、冷氣插座、配電箱、排油煙機和熱水器等用電設備。</li>
+      <li><b>C 大電</b>：插座測試器、驗電插頭、電表、E27 燈泡。每間先在「插座」那組填插座數量，再一個一個測；還有開關與燈座、冷氣插座、配電箱、排油煙機和熱水器等用電設備。</li>
       <li><b>C 弱電</b>：網路測線儀＋網路線。弱電箱、各房網路孔、電視牆、對講機。</li>
       <li><b>C 水</b>：水桶、彈珠、寬版膠帶、衛生紙、抹布、內視鏡、熱像儀、梯子、螺絲起子。所有放水、排水、蓄水、淋水測試，衛浴設備，浴室天花板維修孔。</li>
     </ul>
@@ -219,8 +233,8 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>B 先敲各間浴室和陽台的地磚、壁磚，敲完通知 C 水。C 水在那之前先做廚房（水槽放水、下櫃管線）和窗的軌道排水，收到通知才去浴室、陽台封地排蓄水、倒水看坡度。</li>
       <li>C 大電把配電箱「一次關一個迴路」放到最後做：插座會斷電，關之前喊一聲。順便做配電箱的「最後再看一次」。</li>
       <li>C 水最後回浴室看蓄水水位，用熱像儀掃隔壁牆面和門外地面。</li>
-      <li>看到不是自己範圍的缺失：叫負責的人來記，不要自己記，不然合併的清單會重複。</li>
-      <li>結束：每支手機各自按「匯出缺失清單」→「存到 Google 雲端硬碟」。照片只存在拍的那支手機，當天就要存。</li>
+      <li>看到不是自己範圍的缺失：叫負責的人來記，不要自己記，不然合併的清單會重複。表上找不到的東西，誰看到誰記在那個區塊最後的「補充」（每個角色都看得到）。</li>
+      <li>結束：照片拍完就會自動上傳；每支手機最後按「匯出缺失清單」→「存到 Google 雲端硬碟」，確認底下沒有「☁ 待傳」才離開。</li>
     </ol>
   </details>
 
@@ -244,11 +258,13 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
 
 <div class="bar"><div class="in">
   <span id="sum" class="m1"></span>
+  <button type="button" class="m1" id="sync" hidden></button>
   <button type="button" class="pri m1" id="exp">匯出缺失清單</button>
   <button type="button" class="m1" id="clr">清除</button>
   <span id="rsum" class="m2"></span>
   <button type="button" class="pri m2" id="re-exp">匯出複驗結果</button>
 </div></div>
+<p id="toast" role="status" hidden></p>
 
 <script>
 const PACK=[
@@ -334,8 +350,6 @@ const COMMON={
   ['窗台高度','量出來記在備註（法規門檻待確認）'],
   ['窗框外側','把窗打開往外看，靠陽台的窗站到陽台看：窗框外圍的壁磚填縫飽滿、沒有破損，矽利康沒有漏打。專業驗屋報告最常在這裡抓到填縫不實，雨水也最容易從這裡滲進來']]],
  elec:['插座與開關',[
-  ['三孔插座（110V）','每個都插測試器看燈號與電壓；按 RCD 鍵測漏電跳脫（先確認配電箱在哪）。浴室、廚房、陽台的插座通常會跳，客廳臥室不跳不一定是缺失'],
-  ['兩孔插座','插阿楞驗電插頭：兩燈全亮＝正常、只亮一燈＝火線與中性線接反、都不亮＝沒電'],
   ['開關與燈座','每個開關都對應得到燈；空燈座插 E27 燈泡試'],
   ['位置與數量','插座、開關、網路孔、電視孔對照水電圖'],
   ['面板','平整不歪、沒破、沒沾到油漆']]],
@@ -345,6 +359,10 @@ const COMMON={
   ['排水管','倒一杯水進去，確認會流到室外或排水處；室外機那頭的排水也看']]]
 };
 const ROOMCOMMON=['floor','wall','ceil','door','win','elec','ac'];
+// 先填數量再展開的組別（key 用自己的組別，數量改了不影響其他項目的 key）：
+//   c-out＝每間房的插座逐一測，數量存 S.oc[房間 id]；c-add＝每個區塊最後的「補充」（表上沒有、但要記的東西），數量存 S.oc[房間 id+'|add']
+const ADDHINT='表上沒有、但要記下來的東西：先填數量，下面就會列出「補充 1、補充 2……」。每一項在備註寫是什麼、在哪裡，並拍照；有問題按 ✗（會編號、列進缺失清單），只是記錄按 ✓（列在匯出最後的「合格項目備註」）。';
+const OUTHINT='先數這間有幾個插座，填在上面，下面就會一個一個列出來。每個都插測試器看燈號與電壓；三孔按 RCD 鍵測漏電跳脫（浴室、廚房、陽台通常會跳，客廳臥室不跳不一定是缺失）；兩孔插驗電插頭：兩燈全亮＝正常、只亮一燈＝火線與中性線接反、都不亮＝沒電。備註寫位置，例如「電視牆左」。冷氣的 220V 插座在「冷氣」那組。';
 
 const DEF={
  living:{t:'客廳（含玄關）',common:ROOMCOMMON,spec:[
@@ -459,22 +477,46 @@ const DEF={
    ['水塔（若有）','固定牢靠、蓋子蓋好；底部和接管沒有滲漏']]]]}
 };
 DEF.lounge={t:'客廳',common:ROOMCOMMON,spec:[['設備',DEF.living.spec[1][1].filter(x=>['電視牆','落地窗'].includes(x[0]))]]};
+// 室外：只有 FIX 裡寫了 garage／shutter 才列（見 sections()）
+DEF.garage={t:'車庫（露天）',spec:[
+ ['車庫地坪',[
+  ['地面裂縫、破損','整片走一遍，看有沒有裂縫、坑洞、起砂（表面一摸就掉粉）'],
+  ['洩水坡度','倒水看會流向排水溝或排水孔，不能積水、不能往屋內流'],
+  ['排水溝與蓋板','排水溝通暢、沒被水泥砂堵住，內視鏡伸進排水孔看管內；格柵蓋板放得穩、踩上去不晃']]],
+ ['車庫設備',[
+  ['照明','開關對應得到、會亮；有感應燈的話走過去會亮'],
+  ['戶外插座（若有）','有防水蓋；插測試器看燈號與電壓'],
+  ['車擋、標線（若有）','固定牢靠、位置合理']]],
+ ['外牆與圍牆',[
+  ['外牆磁磚','驗屋錘敲手搆得到的範圍；看有沒有裂縫、缺角、填縫不實'],
+  ['圍牆、門柱（若有）','沒有裂縫、傾斜']]]]};
+DEF.shutter={t:'鐵捲門',spec:[
+ ['鐵捲門',[
+  ['開關運轉','遙控器和牆上開關各開關一次：運轉順、沒有異音、不卡頓，門片不歪'],
+  ['停止與遇阻','運轉中按停止要停；有安全感應的，下降時碰到障礙物會停或往上（用紙箱試，人不要站在門下）'],
+  ['上下限位置','全開時下緣夠高、車子進得去；全關時貼地，沒有大縫'],
+  ['停電手動','問建商停電時怎麼開（手拉鏈、手搖桿或備用電池），實際試一次'],
+  ['遙控器','數量對、每支都能用'],
+  ['門片、導軌外觀','門片沒有凹陷、刮傷、生鏽；兩側導軌固定牢靠'],
+  ['馬達與控制箱','馬達固定牢靠、配線有收好、控制箱有蓋']]]]};
 
 // 多人分工（「我負責」）：A 量測＋門窗、B 敲＋看表面、E＝C 大電、L＝C 弱電、W＝C 水。先看項目名稱（RT），沒有再看所在組別（RG）
 const WHO={A:'A 量測＋門窗',B:'B 敲＋看表面',E:'C 大電',L:'C 弱電',W:'C 水'};
-const RG={地坪:'B',牆面:'B',天花板:'B',門:'A',窗:'A',插座與開關:'E',冷氣:'E',大門:'A',設備:'E',臥室專屬:'A',台面與水槽:'W',櫃體:'B',
+const RG={補充:'ABELW',車庫地坪:'W',車庫設備:'E',外牆與圍牆:'B',鐵捲門:'A',插座:'E',地坪:'B',牆面:'B',天花板:'B',門:'A',窗:'A',插座與開關:'E',冷氣:'E',大門:'A',設備:'E',臥室專屬:'A',台面與水槽:'W',櫃體:'B',
   地面與牆:'W',衛浴設備:'W',排水:'W',欄杆與外牆:'A',先看:'E',實測:'E',弱電箱:'L',樓梯:'B',排水與防水:'W',女兒牆與設備:'A'};
 const RT={地坪平整:'A',牆面平整與垂直:'A',軌道排水:'W','淋水測試（做得到時）':'W',位置與數量:'EL',排水管:'W',對講機:'L',電視牆:'L',落地窗:'A',玄關:'B',
   '淨水器（若有附）':'W','洗碗機／烘碗機（若有附）':'W',洗衣機位置:'W','曬衣架（若有）':'B','洗衣槽（若有）':'W',床頭插座與開關:'E','衣櫃（若有附）':'B',
   流理台台面:'B',地磚與壁磚空心:'B','抽風機／暖風機':'E','鏡子、鏡櫃、毛巾架':'B','浴櫃（若有）':'B',維修孔:'W',抽風機風管:'W',天花板內管線:'W',制水閥:'W',
-  地磚與外牆磚:'B',金屬件鏽斑:'B',扶手:'A',樓梯燈:'E',地面:'B','水塔（若有）':'W'};
+  地磚與外牆磚:'B',金屬件鏽斑:'B',扶手:'A',樓梯燈:'E',地面:'B','水塔（若有）':'W',
+  '地面裂縫、破損':'B','車擋、標線（若有）':'B',馬達與控制箱:'E'};
 const role=(g,t)=>RT[t]||RG[g];
-// 現場算好的樓層與間數，例如 {n:2,f:[{liv:1,bed:3,bath:2,balc:1},{liv:0,bed:2,bath:1,balc:1}]}；設了就照這個、藏起樓層設定（null＝讓人自己填）
-const FIX=null;
+// 現場算好的樓層與間數；設了就照這個、藏起樓層設定（null＝讓人自己填）。garage／shutter：1＝列出「車庫（露天）」「鐵捲門」
+// 目前這組是 Jay 給的假設，看介面用：1F 客廳＋一間廁所；2F、3F 各兩間套房（一間有陽台）；4F 一間房沒廁所、前後陽台；外面露天車庫＋鐵捲門
+const FIX={n:4,f:[{liv:1,bed:0,bath:1,balc:0},{liv:0,bed:2,bath:2,balc:1},{liv:0,bed:2,bath:2,balc:1},{liv:0,bed:1,bath:0,balc:2}],garage:1,shutter:1};
 
 const KEY='yanwu-checklist-v1';
 // c.n＝樓層數；c.f[k]＝第 k+1 層的 {liv 客廳, bed 臥室, bath 浴室, balc 陽台}（f 可比 n 長，減層再加回來時數量還在）
-const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:'',code:'',who:'',num:{},seq:0,mode:'first',rn:1,r:{items:[],v:{},n:{},unit:''}});
+const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:'',code:'',who:'',oc:{},num:{},seq:0,mode:'first',rn:1,r:{items:[],v:{},n:{},unit:''}});
 let S=fresh();
 try{const o=JSON.parse(localStorage.getItem(KEY));if(o){S=Object.assign(fresh(),o);
   const c=o.c||{};S.c=c.f?c:{n:1,f:[{liv:1,bed:c.bed||3,bath:c.bath||2,balc:c.balc||1}]};}}catch(e){}   // 舊格式 {bed,bath,balc} → 1 層
@@ -488,8 +530,12 @@ function sections(){
   const L=[];
   const add=(id,d,t)=>L.push({id,t:t||d.t,note:d.note,groups:[
     ...(d.spec||[]).map(g=>[g[0],g[1],g[0],false]),
-    ...(d.common||[]).map(k=>[COMMON[k][0],COMMON[k][1].map(x=>[x[0],id==='living'&&x[2]||/^f[2-9]-/.test(id)&&x[3]||x[1]]),'c-'+k,true])]});
+    ...(d.common||[]).flatMap(k=>{const g=[COMMON[k][0],COMMON[k][1].map(x=>[x[0],id==='living'&&x[2]||/^f[2-9]-/.test(id)&&x[3]||x[1]]),'c-'+k,true];
+      return k==='elec'?[['插座',Array.from({length:S.oc[id]||0},(_,i)=>[`插座 ${i+1}`,'']),'c-out',true],g]:[g];}),
+    ['補充',Array.from({length:S.oc[id+'|add']||0},(_,i)=>[`補充 ${i+1}`,'']),'c-add',false]]});
   const many=S.c.n>1;
+  if(S.c.shutter)add('shutter',DEF.shutter);   // 室外先走：進門前的鐵捲門、車庫
+  if(S.c.garage)add('garage',DEF.garage);
   // 1F 沿用原本的 id（living、bed1、bath1…）讓舊勾選對得上；2F 起加前綴 f2-；兩層以上標題前加「1F 」等
   for(let k=1;k<=S.c.n;k++){
     const f=S.c.f[k-1],pre=many?k+'F ':'',fid=k>1?`f${k}-`:'';
@@ -508,7 +554,9 @@ function sections(){
 const k3=(sid,gk,i)=>sid+'|'+gk+'|'+i;
 // 畫面和進度只算「我負責」的項目，每項帶原本的序號 i（key 用它）；匯出、照片仍用 sections() 看全部
 const mine=(g,t)=>!S.who||[...role(g,t)].some(r=>S.who.includes(r));
-const shown=()=>sections().map(s=>({...s,groups:s.groups.map(([gn,items,gk,c])=>[gn,items.map(([t,h],i)=>[t,h,i]).filter(([t])=>mine(gn,t)),gk,c]).filter(g=>g[1].length)})).filter(s=>s.groups.length);
+const shown=()=>sections().map(s=>({...s,groups:s.groups.map(([gn,items,gk,c])=>[gn,items.map(([t,h],i)=>[t,h,i]).filter(([t])=>mine(gn,t)),gk,c]).filter(g=>g[1].length||CNT[g[2]]&&mine(g[0],''))})).filter(s=>s.groups.some(g=>g[2]!=='c-add'));   // 插座、補充數量 0 時也要留著填數量；只剩「補充」的區塊（這個角色沒有要檢查的）不列
+// 先填數量的組別：[存數量的 key, 說明]
+const CNT={'c-out':[id=>id,OUTHINT],'c-add':[id=>id+'|add',ADDHINT]};
 
 function render(){
   $('#pack').innerHTML=PACK.map(([g,items])=>`<h3 class="g">${g}</h3>`+items.map(([t,h],i)=>
@@ -518,8 +566,9 @@ function render(){
   const open=new Set([...document.querySelectorAll('#rooms details[open]')].map(d=>d.id));
   $('#rooms').innerHTML=secs.map(s=>`<details class="sec" id="sec-${s.id}"${open.has('sec-'+s.id)?' open':''}><summary><span class="t">${s.t}</span><span class="prog" data-prog="${s.id}"></span><span class="pbar" data-bar="${s.id}" role="progressbar" aria-label="${s.t} 進度" aria-valuemin="0"></span></summary>`+
     (s.note?`<p class="secnote">${s.note}</p>`:'')+
-    s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}</h3>`+items.map(([t,h,i])=>
-      `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text" placeholder="缺失備註：位置、狀況" aria-label="缺失備註"><div class="ph"><button type="button" class="cam">📷 拍照</button></div></div>`).join('')).join('')+
+    s.groups.map(([gn,items,gk,c])=>`<h3 class="g">${gn}${c?'<span class="c">通用</span>':''}`+
+      (CNT[gk]?`<label class="oc">數量 <input type="number" min="0" max="40" inputmode="numeric" data-oc="${CNT[gk][0](s.id)}" data-op="${s.id}|${gk}|" data-on="${gn}" value="${S.oc[CNT[gk][0](s.id)]||0}"></label></h3><p class="secnote">${CNT[gk][1]}</p>`:'</h3>')+items.map(([t,h,i])=>
+      `<div class="item" data-k="${k3(s.id,gk,i)}"><div class="txt"><b><span class="no"></span>${t}</b>${h?`<span class="hint">${h}</span>`:''}</div><div class="btns"><button type="button" class="ok" aria-label="合格" aria-pressed="false">✓</button><button type="button" class="bad" aria-label="缺失" aria-pressed="false">✗</button></div><input class="note" type="text"><div class="ph"><button type="button" class="cam">📷 拍照</button></div></div>`).join('')).join('')+
     `</details>`).join('');
   document.querySelectorAll('#rooms .item').forEach(it=>{setState(it,S.v[it.dataset.k]||0);it.querySelector('.note').value=S.n[it.dataset.k]||''});
   paintPh();
@@ -538,17 +587,21 @@ function setState(it,s){
   it.querySelector('.no').textContent=s===2?tag(it.dataset.k):'';
   it.querySelector('.ok').setAttribute('aria-pressed',s===1);
   it.querySelector('.bad').setAttribute('aria-pressed',s===2);
+  const n=it.querySelector('.note'),p=s===1?'合格備註：位置、量到的數值':'缺失備註：位置、狀況';n.placeholder=p;n.setAttribute('aria-label',p.split('：')[0]);
+  phMark(it);
 }
+// 每一項（合格也算）都要有照片：勾了還沒拍的標「還沒拍照」
+const phMark=it=>it.classList.toggle('noph',+it.dataset.s>0&&!(PH[it.dataset.k]||[]).length);
 function fill(el,done,b,n){
   if(!el)return;
   el.setAttribute('aria-valuemax',n);el.setAttribute('aria-valuenow',done);
   el.innerHTML=`<i class="o" style="width:${(done-b)/n*100}%"></i><i class="x" style="width:${b/n*100}%"></i>`;
 }
 function update(){
-  let bad=0,N=0,D=0;
+  let bad=0,N=0,D=0,miss=0;
   for(const s of shown()){
     let n=0,done=0,b=0;
-    s.groups.forEach(([,items,gk])=>items.forEach(([,,i])=>{n++;const v=S.v[k3(s.id,gk,i)];if(v)done++;if(v===2)b++}));
+    s.groups.forEach(([,items,gk])=>items.forEach(([,,i])=>{n++;const k=k3(s.id,gk,i),v=S.v[k];if(v)done++;if(v===2)b++;if(v&&!(PH[k]||[]).length)miss++}));
     bad+=b;N+=n;D+=done;
     const p=document.querySelector(`[data-prog="${s.id}"]`);
     if(p)p.innerHTML=`${done}/${n}`+(b?` · <span class="b">缺失 ${b}</span>`:'');
@@ -558,11 +611,12 @@ function update(){
   }
   const pk=document.querySelectorAll('[data-p]'),pc=[...pk].filter(x=>x.checked).length;
   $('#pk-prog').textContent=`已備 ${pc}/${pk.length}`;
-  $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`;
+  $('#sum').innerHTML=`缺失 <b>${bad}</b> 項`+(miss?`<span class="nophs">・${miss} 項沒拍照</span>`:'');
   $('#tot-t').textContent=`總進度 ${D}/${N} · ${Math.round(D/N*100)}%`;
   const fs=S.c.f.slice(0,S.c.n),sum=r=>fs.reduce((a,f)=>a+f[r],0);
   $('#cfg-sum').textContent=(S.c.n>1?`${S.c.n} 層 · `:'')+`${sum('bed')} 臥 · ${sum('bath')} 衛 · ${sum('balc')} 陽台`+(S.code.trim()?` · 代號 ${S.code.trim()}`:'')+(S.who?' · 負責 '+[...S.who].map(r=>WHO[r][0]==='C'?WHO[r].replace(' ',''):r).join('、'):'');
   fill($('#tot-bar'),D,bad,N);
+  syncShow();
 }
 
 document.addEventListener('click',e=>{
@@ -575,6 +629,8 @@ document.addEventListener('click',e=>{
   if(s===2)S.num[k]=++S.seq;
   else if(S.num[k]){if(S.num[k]===S.seq)S.seq--;delete S.num[k];}
   setState(it,s);save();update();
+  if(s&&!(PH[k]||[]).length){camK=k;$('#camin').value='';$('#camin').click();}   // 每一項都要拍：勾了還沒拍就直接開相機
+  gAuto();   // 勾選改了，雲端照片的檔名（編號／合格）跟著改
 });
 document.addEventListener('input',e=>{
   const t=e.target;
@@ -586,19 +642,26 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.dataset.p){if(t.checked)S.p[t.dataset.p]=1;else delete S.p[t.dataset.p];save();update();}
+  else if(t.dataset.oc){const key=t.dataset.oc,pre=t.dataset.op,old=S.oc[key]||0,v=Math.max(0,Math.min(40,parseInt(t.value,10)||0)),
+      lost=[S.v,S.n,PH].some(o=>Object.keys(o).some(k=>k.startsWith(pre)&&+k.slice(pre.length)>=v&&(o!==PH||o[k].length)));
+    if(v<old&&lost&&!confirm(`${t.dataset.on} ${v+1} 以後有勾選、備註或照片。數量改成 ${v} 之後它們不會匯出，已經傳上雲端的照片也會移到垃圾桶（數量改回來就會恢復）。確定？`)){t.value=old;return;}
+    S.oc[key]=v;save();render();gAuto();}
   else if(t.closest('#who')){S.who=[...document.querySelectorAll('#who input:checked')].map(x=>x.value).join('');save();render();}
   else if(t.dataset.fl!==undefined){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c.n=v;while(S.c.f.length<v)S.c.f.push({liv:0,bed:2,bath:1,balc:1});save();render();}
   else if(t.dataset.rm){const mx=+t.max,v=Math.max(0,Math.min(mx,parseInt(t.value,10)||0));S.c.f[+t.dataset.f][t.dataset.rm]=v;t.value=v;save();render();}
 });
 
+// 缺失清單（給建商、也給複驗貼回來解析）；最後附「合格項目備註」：合格但有寫備註的項目（量到的數值、位置），那段的行首不是編號，複驗不會當成缺失
 function defectText(d=new Date()){
-  let n=0,body='';
+  let n=0,body='',okn='';
   for(const s of sections()){
     let part='';
-    s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i);if(S.v[k]===2){n++;const np=(PH[k]||[]).length;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}${np?`（照片 ${np} 張）`:''}\n`}}));
+    s.groups.forEach(([gn,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i),np=(PH[k]||[]).length,ph=np?`（照片 ${np} 張）`:'';
+      if(S.v[k]===2){n++;part+=`${tag(k)}. ${gn}｜${t}${S.n[k]?' — '+S.n[k]:''}${ph}\n`}
+      else if(S.v[k]===1&&S.n[k])okn+=`${s.t}｜${gn}｜${t} — ${S.n[k]}${ph}\n`;}));
     if(part)body+=`【${s.t}】\n${part}\n`;
   }
-  return `驗屋初驗結果\n代號：${S.code.trim()||'（未填）'}\n初驗日期：${when(d)}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n');
+  return `驗屋初驗結果\n代號：${S.code.trim()||'（未填）'}\n初驗日期：${when(d)}\n共 ${n} 項\n\n`+(body||'（目前沒有標記缺失）\n')+(okn?`\n【合格項目備註】\n${okn}`:'');
 }
 function when(d){return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} `+[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');}
 function copyOut(ta,msg){
@@ -610,15 +673,21 @@ function copyOut(ta,msg){
 }
 $('#exp').onclick=$('#cp').onclick=()=>{if(gate())return;$('#outt').value=defectText();copyOut($('#outt'),$('#outmsg'));};
 
-// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝Blob 陣列）；✓／✗ 的項目都能拍，上傳時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
-const PH={};let db=null,camK=null;
-const noIdb=()=>document.body.classList.add('noidb');
+// 照片：存在這台裝置的 IndexedDB（key＝項目 k、值＝File 陣列，File 的 name＝這張照片固定的 id，雲端同步靠它認）；
+// ✓／✗ 的項目都要拍，上傳時 ✗ 在前（檔名帶編號）、✓ 在後（檔名＝合格-空間-項目）
+const phId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const PH={};let db=null,camK=null,phReady=0,phFull=0,phOk;
+// IndexedDB 的照片讀完（或確定讀不到）才 resolve；在那之前不能同步，不然會把雲端照片當成手機上刪掉了。
+// phFull＝真的完整讀完；沒讀完整（打不開、讀到一半出錯）時同步只傳不丟，雲端的照片一張都不會被移到垃圾桶
+const phLoaded=new Promise(r=>phOk=()=>{phReady=1;r()});
+const noIdb=()=>{document.body.classList.add('noidb');phOk();};
 const idb=(mode,fn)=>new Promise((ok,ng)=>{if(!db)return ng();const tx=db.transaction('p',mode);fn(tx.objectStore('p'));tx.oncomplete=ok;tx.onerror=tx.onabort=ng;});
 const phSave=k=>idb('readwrite',st=>PH[k]&&PH[k].length?st.put(PH[k],k):st.delete(k)).catch(noIdb);
 function paintOne(it){
   const ph=it.querySelector('.ph');
   ph.querySelectorAll('img').forEach(i=>{URL.revokeObjectURL(i.src);i.remove()});
   (PH[it.dataset.k]||[]).forEach((b,i)=>{const im=new Image();im.src=URL.createObjectURL(b);im.alt=`照片 ${i+1}（點一下刪除）`;im.dataset.i=i;ph.append(im)});
+  phMark(it);
 }
 function paintPh(){document.querySelectorAll('#rooms .item').forEach(it=>{if(PH[it.dataset.k]||it.querySelector('.ph img'))paintOne(it)});}
 function phList(){
@@ -626,8 +695,8 @@ function phList(){
   for(const s of sections())s.groups.forEach(([,items,gk])=>items.forEach(([t],i)=>{const k=k3(s.id,gk,i),v=S.v[k];
     (PH[k]||[]).forEach((b,j)=>{const opt={type:b.type||'image/jpeg'};
       const at=`${s.t.replace('（含玄關）','')}-${t}-${j+1}.${ext(b)}`;   // 檔名帶空間和項目：缺失＝編號開頭、合格＝「合格」開頭
-      if(v===2)bad.push(new File([b],safe(`${tag(k)}-${at}`),opt));
-      else if(v===1)ok.push(new File([b],safe(`合格-${at}`),opt));})}));
+      const f=v===2?new File([b],safe(`${tag(k)}-${at}`),opt):v===1?new File([b],safe(`合格-${at}`),opt):null;
+      if(f){f.pid=b.name;(v===2?bad:ok).push(f);}})}));
   return bad.concat(ok);
 }
 function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new Image();
@@ -636,18 +705,25 @@ function shrink(f){return new Promise(ok=>{const u=URL.createObjectURL(f),im=new
     URL.revokeObjectURL(u);c.toBlob(b=>ok(b||f),'image/jpeg',.82)};
   im.onerror=()=>{URL.revokeObjectURL(u);ok(f)};im.src=u;});}
 try{const rq=indexedDB.open('yanwu-photos',1);rq.onupgradeneeded=()=>rq.result.createObjectStore('p');rq.onerror=noIdb;
-  rq.onsuccess=()=>{db=rq.result;const c=db.transaction('p').objectStore('p').openCursor();c.onsuccess=()=>{const r=c.result;if(r){PH[r.key]=r.value;r.continue()}else paintPh()}};
+  rq.onsuccess=()=>{db=rq.result;const old=[],c=db.transaction('p').objectStore('p').openCursor();c.onerror=noIdb;
+    // 舊版存的沒有 id：用「項目 key＋第幾張＋大小」補一個固定的（存回失敗、下次重新補也是同一個，不會重傳）
+    c.onsuccess=()=>{const r=c.result;if(r){PH[r.key]=r.value.map((b,j)=>b.name?b:(old.push(r.key),new File([b],`l${r.key}#${j}#${b.size}`,{type:b.type||'image/jpeg'})));r.continue()}
+      else{[...new Set(old)].forEach(phSave);phFull=1;phOk();paintPh();update();gAuto();}}};
 }catch(e){noIdb()}
 $('#rooms').addEventListener('click',e=>{
   if(e.target.closest('.cam')){camK=e.target.closest('.item').dataset.k;$('#camin').value='';$('#camin').click();return;}
   const im=e.target.closest('.ph img');
-  if(im&&confirm('刪除這張照片？')){const it=im.closest('.item'),k=it.dataset.k;PH[k].splice(+im.dataset.i,1);phSave(k);paintOne(it);}
+  if(im&&confirm('刪除這張照片？雲端硬碟上的那張也會移到垃圾桶。')){const it=im.closest('.item'),k=it.dataset.k;PH[k].splice(+im.dataset.i,1);phSave(k);paintOne(it);update();gAuto();}
 });
 $('#camin').onchange=async()=>{
   const f=$('#camin').files[0],k=camK;if(!f||!k)return;
-  (PH[k]=PH[k]||[]).push(await shrink(f));phSave(k);
+  const gen=gGen,b=await shrink(f);
+  // 縮圖途中按了「清除」、或這一頁已被別的分頁接手：這張不要寫進去（被接手時寫了會跟另一頁互相蓋掉）；被接手的話在停用畫面上講明要重拍
+  if(gen!==gGen||gStale){if(gStale)$('#o-lost').hidden=false;return;}
+  (PH[k]=PH[k]||[]).push(new File([b],phId(),{type:b.type||'image/jpeg'}));await phSave(k);
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
   const it=[...document.querySelectorAll('#rooms .item')].find(x=>x.dataset.k===k);if(it)paintOne(it);
+  update();gAuto();   // 拍完就傳
 };
 
 // Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 第N次複驗 代號 戶別」放複驗結果 .txt。
@@ -666,65 +742,148 @@ function gInit(){
 }
 function gToken(){return new Promise((ok,ng)=>{
   if(gtok&&Date.now()<gexp)return ok(gtok);
+  const t=setTimeout(()=>ng('popup'),120000);   // 視窗被擋又沒有任何回呼時，不要讓上傳佇列永遠等
   google.accounts.oauth2.initTokenClient({client_id:GCFG.client,scope:'https://www.googleapis.com/auth/drive.file',
-    callback:r=>{if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
-    error_callback:e=>ng(e&&e.type||'popup')}).requestAccessToken();});}
-function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',()=>{
+    callback:r=>{clearTimeout(t);if(r.error)return ng(r.error);gtok=r.access_token;gexp=Date.now()+((+r.expires_in||3600)-60)*1000;ok(gtok)},
+    error_callback:e=>{clearTimeout(t);ng(e&&e.type||'popup')}}).requestAccessToken();});}
+function gPick(tok){return new Promise((ok,ng)=>gapi.load('picker',{timeout:20000,ontimeout:()=>ng('picker'),onerror:()=>ng('picker'),callback:()=>{   // 網路不穩載不到也要結束，不然佇列會卡住
   const P=google.picker,v=new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true);
   new P.PickerBuilder().addView(v).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle('選擇要存放的資料夾')
     .setCallback(d=>{if(d.action===P.Action.PICKED){const f={id:d.docs[0].id,name:d.docs[0].name};try{localStorage.setItem('yanwu-gfolder',JSON.stringify(f))}catch(e){}gShowTo();ok(f)}
-      else if(d.action===P.Action.CANCEL)ng('cancel')}).build().setVisible(true);}));}
+      else if(d.action===P.Action.CANCEL)ng('cancel')}).build().setVisible(true);}}));}
+// 每個 Drive 請求 90 秒沒回完就中止（丟 AbortError，gTry 會重試），不讓一個沒回應的請求卡住整條上傳佇列
 async function gApi(url,opt,tok){
-  const r=await fetch(url,Object.assign({},opt,{headers:Object.assign({Authorization:'Bearer '+tok},opt.headers||{})}));
-  if(!r.ok)throw r.status;return r.json();}
-// 傳到一半停掉時記下資料夾和已傳的檔名（存在這台裝置，重新整理也還在）；同一顆按鈕、同一個名稱再按，就接著傳到同一個資料夾，只補沒傳的
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),90000);
+  try{const r=await fetch(url,Object.assign({},opt,{signal:ac.signal,headers:Object.assign({Authorization:'Bearer '+tok},opt.headers||{})}));
+    if(!r.ok)throw r.status;return await r.json();}
+  finally{clearTimeout(t);}}
+const gNet=e=>e instanceof TypeError||(e&&e.name==='AbortError');   // 網路斷或逾時
+// 上傳狀態存在這台裝置（localStorage yanwu-gres，重新整理也還在）：
+//   first＝這一輪初驗的雲端資料夾 {sid,t,f,par,name,up:{照片 id:{id,name}},txt}。照片拍完就傳進去，缺失清單按「存到雲端硬碟」才傳、之後再按是更新同一個檔；按「清除」才換新資料夾
+//   re＝複驗傳到一半時記的 {label,t,f,par,name,done:[檔名]}，再按就接著傳
 const gRes=k=>{try{return (JSON.parse(localStorage.getItem('yanwu-gres'))||{})[k]}catch(e){}};
 const gResSet=(k,v)=>{try{const o=JSON.parse(localStorage.getItem('yanwu-gres'))||{};if(v)o[k]=v;else delete o[k];localStorage.setItem('yanwu-gres',JSON.stringify(o))}catch(e){}};
-const gWhy=e=>e instanceof TypeError?'網路中斷':e>=500||e===429?'Google 暫時忙碌':e===403?'這個帳號沒有權限存進這個資料夾':String(e);
-let gBusy=0;addEventListener('beforeunload',e=>{if(gBusy){e.preventDefault();e.returnValue='';}});   // 上傳中要離開頁面先問
-// 初驗、複驗共用：b＝按鈕、m＝訊息欄、kind＝哪一顆（接續用）、make(d)＝[要上傳的檔（txt 放最後）, 全部傳完才呼叫的 done]；d＝資料夾時間，txt 用同一個
+const gFirst=()=>{const R=gRes('first');return R&&R.up?R:null};   // 第 42 版留下的「傳到一半」（只有 done、沒有 up）不認，當作還沒開始
+const gWhy=e=>e&&e.name==='AbortError'?'網路太慢，逾時':e instanceof TypeError?'網路中斷':e>=500||e===429?'Google 暫時忙碌':e===403?'這個帳號沒有權限存進這個資料夾':String(e);
+let gBusy=0,gLeave=0,gGen=0,gStale=0;addEventListener('beforeunload',e=>{if(gBusy&&!gLeave){e.preventDefault();e.returnValue='';}});   // 上傳中要離開頁面先問
+// 同一支手機只讓一個分頁在用（兩個分頁同時寫，勾選和照片會互相蓋掉，也可能把對方剛傳的照片當成要丟的）：
+// 新打開的分頁接手；舊的分頁蓋上「在另一個分頁開著」，正在跑的同步在下一個請求前停下（live() 丟 'stale'），之後不再寫入。按「改用這一頁」＝重新載入並接手
+const TAB=phId();try{localStorage.setItem('yanwu-tab',TAB)}catch(e){}
+function gTab(){let o=null;try{o=localStorage.getItem('yanwu-tab')}catch(e){}if(o&&o!==TAB){gStale=1;$('#other').hidden=false;}}
+addEventListener('storage',e=>{if(e.key==='yanwu-tab')gTab();});
+addEventListener('pageshow',e=>{if(e.persisted)gTab();});   // 從上一頁快取回來的舊分頁
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)gTab();});
+const p2=x=>String(x).padStart(2,'0'),gStamp=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+const gJSON={'Content-Type':'application/json'};
+// 網路瞬斷或 Google 忙碌：同一個請求最多再試 2 次
+async function gTry(fn,say){for(let t=1;;t++){try{return await fn()}catch(e){if(t>2||!(gNet(e)||e>=500||e===429))throw e;say(`網路不穩，重試中（第 ${t} 次）…`);await new Promise(r=>setTimeout(r,1500*t));}}}
+const gUp=(x,parent,tok)=>{const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:x.name,parents:[parent]})],{type:'application/json'}));fd.append('file',x);
+  return gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);};
+const gMeta=(id,body,tok)=>gApi(`https://www.googleapis.com/drive/v3/files/${id}?fields=id`,{method:'PATCH',headers:gJSON,body:JSON.stringify(body)},tok);
+// 建資料夾；帳號沒在選擇器點過目標資料夾（drive.file 回 404）就跳一次選擇器
+async function gMk(name,tok,say,chk=()=>{}){   // chk：選完資料夾、再建之前檢查（例如中途按了清除就丟出去，不多建一個空資料夾）
+  let par=gFolder();
+  const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:gJSON,body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
+  try{return {par,f:await mk(par)}}catch(e){if(e!==404)throw e;
+    say(`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`);
+    par=await gPick(tok);chk();return {par,f:await mk(par)};}
+}
+// 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）。回傳「放掉」
+function gWake(){let wl=null;try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}return ()=>{if(wl)wl.release().catch(()=>{})};}
+function gFail(e,kind){
+  if(e===401)gtok=null;
+  if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gResSet(kind,null);gShowTo();}
+  if(e==='reset')return '已按清除，這次上傳停止了。';
+  if(e==='stale')return '這個網頁在另一個分頁開著，這一頁已停用。';
+  if(e==='idb')return '手機上的照片還沒讀完，等幾秒再按一次。';
+  if(e==='picker')return 'Google 選資料夾的視窗載不出來（可能網路不穩），請再按一次。';
+  return e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到雲端上的資料夾（可能被刪或沒權限），下次會重新建一個。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':
+    `上傳到一半停了（${gWhy(e)}）；勾選和照片都還在手機上，再按一次會接著傳剩下的。`;
+}
+// 複驗：b＝按鈕、m＝訊息欄、make(d)＝[要上傳的檔, 全部傳完才呼叫的 done]；d＝資料夾時間，txt 用同一個
 async function gSave(b,m,kind,label,make){
   if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
-  b.disabled=true;gBusy=1;m.textContent='準備上傳…';let wl=null,files=[];
-  // 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）
-  try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}
+  const tp=gToken();   // 按下去的當下就要呼叫，登入視窗才不會被擋
+  b.disabled=true;gBusy++;m.textContent='準備上傳…';const unwake=gWake(),say=t=>m.textContent=t;
   try{
-    const tok=await gToken();
+    const tok=await tp;
     let R=gRes(kind);if(R&&R.label!==label)R=null;
-    const d=R?new Date(R.t):new Date(),[fs,done]=make(d);files=fs;
-    if(!R){
-      let par=gFolder();
-      const p2=x=>String(x).padStart(2,'0'),name=`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}_${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${label}`;
-      m.textContent='建立資料夾…';
-      const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
-      let f;
-      try{f=await mk(par)}catch(e){if(e!==404)throw e;
-        m.textContent=`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`;
-        par=await gPick(tok);f=await mk(par);}
-      R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);
-    }
-    const todo=files.filter(x=>!R.done.includes(x.name));
-    for(const x of todo){
-      m.textContent=`上傳中 ${R.done.length+1}/${files.length}…`;
-      for(let t=1;;t++){   // 網路瞬斷或 Google 忙碌：同一個檔最多再試 2 次
-        try{const fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name:x.name,parents:[R.f.id]})],{type:'application/json'}));fd.append('file',x);
-          await gApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd},tok);break;}
-        catch(e){if(t>2||!(e instanceof TypeError||e>=500||e===429))throw e;
-          m.textContent=`網路不穩，重試中（第 ${t} 次）…`;await new Promise(r=>setTimeout(r,1500*t));}
-      }
-      R.done.push(x.name);gResSet(kind,R);
+    const d=R?new Date(R.t):new Date(),[files,done]=make(d);
+    if(!R){const name=`${gStamp(d)} ${label}`;say('建立資料夾…');const {par,f}=await gMk(name,tok,say);R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);}
+    for(const x of files.filter(x=>!R.done.includes(x.name))){
+      say(`上傳中 ${R.done.length+1}/${files.length}…`);
+      await gTry(()=>gUp(x,R.f.id,tok),say);R.done.push(x.name);gResSet(kind,R);
     }
     gResSet(kind,null);done();
     m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」，共 ${files.length} 個檔案。<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
-  }catch(e){
-    if(e===401)gtok=null;
-    if(e===404){try{localStorage.removeItem('yanwu-gfolder')}catch(x){}gResSet(kind,null);gShowTo();}
-    const R=gRes(kind);
-    m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':
-      R?`上傳到一半停了（${gWhy(e)}），已傳 ${R.done.length}/${files.length} 個檔；勾選和照片都還在手機上。再按一次會接著傳剩下的。`:`上傳失敗（${gWhy(e)}），勾選和照片都還在手機上，請再按一次。`;
-  }finally{b.disabled=false;gBusy=0;if(wl)wl.release().catch(()=>{});}
+  }catch(e){m.textContent=gFail(e,kind);}
+  finally{b.disabled=false;gBusy--;unwake();}
 }
+// 初驗：把手機上的照片同步到這一輪的資料夾——沒傳的傳、勾選改了的改檔名、手機上刪掉或取消勾選的丟垃圾桶；withTxt 時再傳（或更新）缺失清單。
+// tp＝gToken() 的 promise（按鈕裡要當下呼叫）。同一時間只跑一個，後來的排隊
+let gQ=Promise.resolve(),gAutoT=0;
+function gSync(tp,withTxt,say){const j=gQ.then(()=>gSync1(tp,withTxt,say));gQ=j.catch(()=>{});return j;}
+async function gSync1(tp,withTxt,say){
+  gBusy++;const unwake=gWake();syncShow();
+  try{
+    const gen=gGen,tok=await tp;
+    // 照片還沒從 IndexedDB 讀完就同步，會把雲端照片當成手機上刪掉了 → 先等（最多 10 秒）
+    await Promise.race([phLoaded,new Promise((_,ng)=>setTimeout(()=>ng('idb'),10000))]);
+    // 中途按了「清除」（gGen 變了、或存的狀態不見／換了一輪）或別的分頁改了資料：每個請求（含重試）前都檢查，停下來、不寫回、不再動雲端
+    let R=gFirst();
+    const live=()=>{if(gen!==gGen)throw 'reset';if(gStale)throw 'stale';if(R){const c=gFirst();if(!c||c.sid!==R.sid)throw 'reset';}};
+    const T=fn=>gTry(()=>{live();return fn()},say),put=()=>{live();gResSet('first',R);};
+    live();
+    if(!R){const d=new Date(),code=S.code.trim(),name=`${gStamp(d)} 初驗${code?' '+code:''}`;say('建立資料夾…');
+      const chk=()=>{if(gen!==gGen||gStale)throw gStale?'stale':'reset';};
+      const {par,f}=await gMk(name,tok,say,chk);chk();   // 建資料夾途中按了清除：不要把這個資料夾記成新的一輪
+      R={sid:phId(),t:d.getTime(),f,par,name,up:{},txt:null};gResSet('first',R);}
+    if(withTxt){   // 手動存檔時先核對雲端（每一頁都讀）：被人從雲端刪掉的照片、txt 這次補傳
+      say('核對雲端上的檔案…');
+      const q=encodeURIComponent(`'${R.f.id}' in parents and trashed=false`),have=new Set();let pt='';
+      do{const r=await T(()=>gApi(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=nextPageToken,files(id)&pageSize=1000${pt?'&pageToken='+encodeURIComponent(pt):''}`,{},tok));
+        (r.files||[]).forEach(f=>have.add(f.id));pt=r.nextPageToken;}while(pt);
+      for(const p of Object.keys(R.up))if(!have.has(R.up[p].id))delete R.up[p];
+      if(R.txt&&!have.has(R.txt))R.txt=null;
+      put();
+    }
+    const want=phList(),ids=new Set(want.map(x=>x.pid)),todo=want.filter(x=>!R.up[x.pid]||R.up[x.pid].name!==x.name);
+    let i=0;
+    const up=async x=>{R.up[x.pid]={id:(await T(()=>gUp(x,R.f.id,tok))).id};};
+    for(const x of todo){
+      say(`上傳照片 ${++i}/${todo.length}…`);
+      if(R.up[x.pid])await T(()=>gMeta(R.up[x.pid].id,{name:x.name},tok)).catch(e=>{if(e!==404)throw e;return up(x);});   // 雲端那張被刪了就重傳
+      else await up(x);
+      R.up[x.pid].name=x.name;put();syncShow();
+    }
+    if(phFull)for(const pid of Object.keys(R.up))if(!ids.has(pid)){   // 手機照片沒完整讀到時不丟
+      await T(()=>gMeta(R.up[pid].id,{trashed:true},tok)).catch(e=>{if(e!==404)throw e;});
+      delete R.up[pid];put();
+    }
+    if(withTxt){
+      const txt=defectText(new Date(R.t));say('上傳缺失清單…');
+      if(R.txt)await T(()=>gApi(`https://www.googleapis.com/upload/drive/v3/files/${R.txt}?uploadType=media&fields=id`,{method:'PATCH',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:txt},tok)).catch(e=>{if(e!==404)throw e;R.txt=null;});
+      if(!R.txt){R.txt=(await T(()=>gUp(new File([txt],'驗屋初驗結果.txt',{type:'text/plain'}),R.f.id,tok))).id;put();}
+      $('#outt').value=txt;
+    }
+    return R;
+  }finally{gBusy--;unwake();syncShow();}
+}
+const gOk=()=>!!(gtok&&Date.now()<gexp);   // 權杖還有效：背景傳不會跳視窗
+function gPend(){if(!phReady)return 0;const R=gFirst()||{up:{}},w=phList(),ids=new Set(w.map(x=>x.pid));
+  return w.filter(x=>!R.up[x.pid]||R.up[x.pid].name!==x.name).length+Object.keys(R.up).filter(p=>!ids.has(p)).length;}
+function syncShow(){const b=$('#sync');if(!GCFG.client){b.hidden=true;return;}
+  const n=gPend();b.hidden=!n&&!gBusy;b.disabled=!!gBusy;b.textContent=gBusy?'☁ 上傳中…':`☁ 待傳 ${n}`;}
+// 拍完、刪照片、改勾選之後呼叫：權杖還有效就在背景同步照片；過期了只顯示「☁ 待傳 N」，要按一下（才能跳登入）
+function gAuto(){
+  syncShow();
+  if(!GCFG.client||!gOk()||!window.google||!S.code.trim())return;
+  clearTimeout(gAutoT);gAutoT=setTimeout(()=>{   // 計時器觸發時再確認一次權杖：剛好過期就不要在沒有手勢時叫登入
+    if(gOk()&&gPend())gSync(gToken(),false,t=>{if(!/^(上傳照片|建立資料夾)/.test(t))toast(t)}).catch(e=>toast(gFail(e,'first')));},800);
+}
+let toastT=0;
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,6000);}
+const noPh=()=>sections().reduce((a,s)=>a+s.groups.reduce((b,[,items,gk])=>b+items.filter((_,i)=>{const k=k3(s.id,gk,i);return S.v[k]&&!(PH[k]||[]).length}).length,0),0);
 // 進畫面先過兩關才能用：登入 Google（只要登入成功，不查資料夾權限；記在這台裝置）、填我的代號。
 // 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
 function gate(){
@@ -741,7 +900,7 @@ $('#g-in').onclick=async()=>{
   try{
     await gToken();
     try{localStorage.setItem('yanwu-gok','1')}catch(e){}
-    gate();
+    gate();gAuto();
   }catch(e){
     m.textContent=e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
   }finally{b.disabled=false;}
@@ -750,9 +909,16 @@ $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
   if(!v){$('#g-cmsg').textContent='請先填代號。';return;}
   S.code=v;save();render();gate();};
 $('#g-cin').onkeydown=e=>{if(e.key==='Enter')$('#g-go').click();};
-$('#gup').onclick=()=>{if(gate())return;const code=S.code.trim();
-  gSave($('#gup'),$('#gmsg'),'first','初驗'+(code?' '+code:''),d=>{const txt=defectText(d);
-    return [[...phList(),new File([txt],'驗屋初驗結果.txt',{type:'text/plain'})],()=>$('#outt').value=txt];});};
+$('#o-use').onclick=()=>{gLeave=1;location.reload();};   // 重新載入＝讀最新的資料並接手（載入時會把自己設成使用中的分頁）
+$('#gup').onclick=()=>{if(gate())return;const m=$('#gmsg'),b=$('#gup');
+  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
+  const tp=gToken();b.disabled=true;m.textContent='準備上傳…';
+  gSync(tp,true,t=>m.textContent=t).then(R=>{const miss=noPh();
+    m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」：缺失清單已更新，照片 ${Object.keys(R.up).length} 張。${miss?`<b>還有 ${miss} 項沒拍照。</b>`:''}<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;},
+    e=>{m.textContent=gFail(e,'first');}).finally(()=>b.disabled=false);};
+$('#sync').onclick=()=>{if(gate())return;
+  if(!window.google||!google.accounts||!window.gapi){toast('Google 元件還沒載入，等幾秒再按一次。');return;}
+  gSync(gToken(),false,toast).then(()=>toast('照片都傳上去了。'),e=>toast(gFail(e,'first')));};
 $('#re-gup').onclick=()=>{if(gate())return;
   gSave($('#re-gup'),$('#re-gmsg'),'re',[`第${S.rn}次複驗`,S.code.trim(),S.r.unit].filter(Boolean).join(' '),d=>{const txt=reText(d);
     return [[new File([txt],'驗屋複驗結果.txt',{type:'text/plain'})],()=>$('#re-outt').value=txt];});};
@@ -813,7 +979,7 @@ let shut=[];
 window.addEventListener('beforeprint',()=>{shut=[...document.querySelectorAll('details:not([open])')];shut.forEach(d=>d.open=true)});
 window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
-$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();gResSet('first',null);gResSet('re',null);for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
+$('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();gGen++;gResSet('first',null);gResSet('re',null);for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
 render();
 renderRe();
