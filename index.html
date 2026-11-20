@@ -649,7 +649,7 @@ function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
   let ok=null;try{ok=localStorage.getItem('yanwu-gok')}catch(e){}
-  if(!ok){$('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」。先登入，確認這個帳號存得進去；每支手機只要登入一次。`;$('#gate').hidden=false;}
+  if(!ok){$('#g-why').textContent=`驗完要把缺失清單和照片存到「${gFolder().name}」，請先登入 Google。每支手機只要登入一次。`;$('#gate').hidden=false;}
   for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
 }
 function gToken(){return new Promise((ok,ng)=>{
@@ -692,21 +692,17 @@ async function gSave(b,m,d,label,files,done){
     m.textContent=e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到原本的資料夾（可能被刪或沒權限），下次會請你重選。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`上傳失敗（${e}），已上傳的檔案會留在資料夾裡，請再按一次。`;
   }finally{b.disabled=false;}
 }
-// 進畫面先登入：取得權杖、確認這個帳號能在資料夾裡新增東西（沒點過的帳號 404 → 選擇器點一次）。成功記在這台裝置，之後不再擋
+// 進畫面先登入 Google（只要登入成功就放行，不查資料夾權限）。成功記在這台裝置，之後不再擋
 $('#g-in').onclick=async()=>{
   const b=$('#g-in'),m=$('#g-msg');
-  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
+  if(!window.google||!google.accounts){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
   b.disabled=true;m.textContent='登入中…';
   try{
-    const tok=await gToken();let par=gFolder();
-    const can=p=>gApi(`https://www.googleapis.com/drive/v3/files/${p.id}?fields=capabilities(canAddChildren)`,{},tok);
-    let r;try{r=await can(par)}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點一次「${par.name}」。`;par=await gPick(tok);r=await can(par);}
-    if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
+    await gToken();
     try{localStorage.setItem('yanwu-gok','1')}catch(e){}
     $('#gate').hidden=true;
   }catch(e){
-    if(e===401)gtok=null;
-    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${gFolder().name}」：請資料夾擁有者把你加成「編輯者」，再按一次。`:e==='cancel'?`沒有選資料夾，請再按一次。找不到「${gFolder().name}」的話，請資料夾擁有者先把你加成「編輯者」。`:e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
+    m.textContent=e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入失敗（${e}），請再按一次。`;
   }finally{b.disabled=false;}
 };
 $('#gup').onclick=()=>{const d=new Date(),txt=defectText(d),code=S.code.trim();
