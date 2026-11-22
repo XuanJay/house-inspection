@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#2f6fb0">
 <title>新成屋驗屋檢查表</title>
 <script>try{var st=localStorage.getItem('yanwu-style');if(st)document.documentElement.dataset.style=st}catch(e){}</script>
 <style>
@@ -121,6 +124,7 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 #gate .card,#other .card{max-width:480px;margin:10vh auto 0}
 #gate button,#other button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 #gate #g-in,#gate #g-go,#other #o-use{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
+#gate #g-off{width:100%;margin-top:10px}
 #gate input{font:inherit;width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
@@ -144,6 +148,8 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <p class="sub" id="g-why"></p>
     <button type="button" id="g-in">登入 Google</button>
     <p class="sub" id="g-msg" aria-live="polite"></p>
+    <button type="button" id="g-off">現場沒網路，先填</button>
+    <p class="sub">先填的話，勾選和照片都先存在這支手機。回到有網路的地方按底下的「☁ 待傳」，那時才登入、確認權限、補傳。</p>
   </div>
   <div id="g-code" hidden>
     <h2>填你的代號</h2>
@@ -212,6 +218,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <summary><span class="t">驗屋當日流程</span></summary>
     <p class="sub">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✓ 或 ✗ 會出現拍照鈕，按 ✗ 還會出現備註欄。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
     <ol class="flow">
+      <li>出發前在有網路的地方：用 Chrome（Android）或 Safari（iPhone）打開這個網頁，登入 Google、填好代號，現場就不用再登入。Android 可以在 Chrome 選單按「加到主畫面」或「安裝應用程式」，之後從主畫面的圖示打開。iPhone 用 Safari 開就好，先不要加到主畫面：主畫面上的版本跟 Safari 的資料不相通，Google 登入也可能不正常。打開過一次之後，現場沒網路也開得起來。</li>
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。浴室的地磚、壁磚要先用驗屋錘敲過再蓄水，水放下去就敲不到了。</li>
@@ -219,7 +226,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <li>每一項都要拍照，合格的也要：按 ✓ 或 ✗ 會直接開相機；還沒拍的項目會標「還沒拍照」，底下也會顯示幾項沒拍。遇到缺失：按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置），再按「📷 拍照」補一張近景 → 備註寫位置與狀況。合格的也可以寫備註，例如位置、量到的數值。插座先在「插座」那組填這間有幾個，再一個一個測。表上沒有、但要記的東西，按每個區塊最後的「＋ 新增補充」，寫備註、拍照。按錯或這次不做的項目，按該項的「清除這項」，勾選、備註和照片會一起清掉。</li>
       <li>別支手機做過的項目，會在項目底下標「已做：B ✓」（約每分鐘更新一次，要有網路）。勾「只看還沒做完的」，下面只列沒人做過、或還沒拍照的項目；自己那組做完，切到別組的分類、勾這個，就知道還剩哪些可以幫忙。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
-      <li>照片拍完就會自動上傳到雲端硬碟。登入超過大約一小時，或重新整理過頁面，要按底下的「☁ 待傳」才會繼續傳（會跳一次 Google 視窗）。走完按「匯出缺失清單」，再按「存到 Google 雲端硬碟」，把缺失清單存進同一個資料夾；看到「已存到」、底下也沒有「☁ 待傳」才算全部傳完。清單交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
+      <li>照片拍完就會自動上傳到雲端硬碟。登入超過大約一小時，或重新整理過頁面，要按底下的「☁ 待傳」才會繼續傳（會跳一次 Google 視窗）。現場沒網路也照常勾選、拍照，照片先存在手機；回到有網路的地方再按「☁ 待傳」補傳。照片不會進手機相簿，傳完之前不要清除瀏覽器的網站資料。走完按「匯出缺失清單」，再按「存到 Google 雲端硬碟」，把缺失清單存進同一個資料夾；看到「已存到」、底下也沒有「☁ 待傳」才算全部傳完。清單交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
   </details>
 
@@ -764,8 +771,14 @@ function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
   $('#g-why').textContent=`照片拍完就會存到「${gFolder().name}」，所以要先登入 Google，並確認這個帳號是那個資料夾的編輯者。第一次會跳出選資料夾的視窗，點「${gFolder().name}」就好。每支手機只要做一次。`;
-  for(const u of ['https://accounts.google.com/gsi/client','https://apis.google.com/js/api.js']){const e=document.createElement('script');e.src=u;e.async=true;document.head.append(e);}
+  gLoad();addEventListener('online',gLoad);
 }
+// 載入 Google 元件。打開網頁時沒網路就載不到；載入失敗、或載完了元件卻沒出來（例如被導到登入頁）的 script 拿掉，
+// 網路回來（online）或按登入／上傳時再載一次。還在載的不重複插（載兩份 GIS 會出問題）；卡住的請求最後會逾時→onerror
+const GJS={'https://accounts.google.com/gsi/client':()=>window.google&&google.accounts,'https://apis.google.com/js/api.js':()=>window.gapi};
+function gLoad(){for(const u in GJS)if(!GJS[u]()&&!document.querySelector(`script[src="${u}"]`)){const e=document.createElement('script');e.src=u;e.async=true;e.onload=e.onerror=()=>GJS[u]()||e.remove();document.head.append(e);}}
+const gNo=()=>{if(window.google&&google.accounts&&window.gapi)return false;gLoad();return true;};   // 元件還沒載入：順便再載一次
+const GNO='Google 元件還沒載入（要有網路），等幾秒再按一次。';
 let gGateFail=0;
 function gToken(pick){return new Promise((ok,ng)=>{   // pick：讓使用者重選帳號（入口沒過、可能登錯帳號時）
   if(!pick&&gtok&&Date.now()<gexp)return ok(gtok);
@@ -830,6 +843,7 @@ async function gMk(name,tok,say,chk=()=>{}){   // chk：選完資料夾、再建
 // 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）。回傳「放掉」
 function gWake(){let wl=null;try{navigator.wakeLock.request('screen').then(l=>{if(gBusy)wl=l;else l.release().catch(()=>{})},()=>{})}catch(e){}return ()=>{if(wl)wl.release().catch(()=>{})};}
 function gFail(e,kind){
+  if(e&&e.chk)return e.chk+'勾選和照片都還在手機上。';   // gCheck（上傳前確認權限）沒過：它已經寫好說明
   if(e===401)gtok=null;
   if(e===404)gResSet(kind,null);
   // 403／404：可能權限被拿掉或換了沒權限的帳號（403 也可能只是 Google 限速）→ 只記「下次打開網頁時入口重新確認」，不在驗屋途中擋人
@@ -845,9 +859,9 @@ function gFail(e,kind){
 }
 // 複驗：b＝按鈕、m＝訊息欄、make(d)＝[要上傳的檔, 全部傳完才呼叫的 done]；d＝資料夾時間，txt 用同一個
 async function gSave(b,m,kind,label,make){
-  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
-  const tp=gToken();   // 按下去的當下就要呼叫，登入視窗才不會被擋
-  b.disabled=true;gBusy++;m.textContent='準備上傳…';const unwake=gWake(),say=t=>m.textContent=t;
+  if(gNo()){m.textContent=GNO;return;}
+  const say=t=>m.textContent=t,tp=gReady(say);   // 按下去的當下就要呼叫，登入視窗才不會被擋
+  b.disabled=true;gBusy++;m.textContent='準備上傳…';const unwake=gWake();
   try{
     const tok=await tp;
     let R=gRes(kind);if(R&&(R.label!==label||!gHome(R)))R=null;
@@ -921,7 +935,10 @@ async function gSync1(tp,withTxt,say,gen){
     return R;
   }finally{gBusy--;unwake();syncShow();}
 }
-const gOk=()=>!!(gtok&&Date.now()<gexp);   // 權杖還有效：背景傳不會跳視窗
+// 權杖還有效、而且就是 gCheck 確認過能存進資料夾的那一枚（gTokOk）：背景傳不會跳視窗。
+// 確認綁在權杖上、不綁裝置：重新登入、換了帳號、兩次確認重疊時，沒確認過的那枚都不會被拿去背景寫；按上傳鈕會先走 gCheck（gReady）
+let gTokOk=null;
+const gOk=()=>!!(gtok&&Date.now()<gexp&&gtok===gTokOk);
 function gPend(){if(!phReady)return 0;const R=gFirst()||{up:{}},w=phList(),ids=new Set(w.map(x=>x.pid));
   return w.filter(x=>!R.up[x.pid]||R.up[x.pid].name!==x.name).length+Object.keys(R.up).filter(p=>!ids.has(p)).length
     +(phFull&&R.txt&&R.tx!==defectText(new Date(R.t))?1:0);}   // 雲端的缺失清單舊了也算一項待傳
@@ -1003,51 +1020,63 @@ $('#othr').onclick=()=>{$('#othw').textContent='更新中…';progGet();};
 let toastT=0;
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,6000);}
 const noPh=()=>sections().reduce((a,s)=>a+s.groups.reduce((b,[,items,gk])=>b+items.filter((x,i)=>{const k=k3(s.id,gk,ik(x,i));return S.v[k]&&!(PH[k]||[]).length}).length,0),0);
-// 進畫面先過兩關才能用：登入 Google（只要登入成功，不查資料夾權限；記在這台裝置）、填我的代號。
+// 進畫面先過兩關才能用：登入 Google 並確認能存進資料夾（或選「現場沒網路，先填」，上傳時才確認；都記在這台裝置）、填我的代號。
 // 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
 function gate(){
-  let ok=null;try{ok=localStorage.getItem('yanwu-gok-w')}catch(e){}   // -w：登入且確認過能存進資料夾（第 44 版起；換了 key，舊的「只登入過」的手機要重新確認一次）
+  let ok=null;try{ok=localStorage.getItem('yanwu-gok-w')||localStorage.getItem('yanwu-off')}catch(e){}   // -w：登入且確認過能存進資料夾（第 44 版起；換了 key，舊的「只登入過」的手機要重新確認一次）；off：選了「現場沒網路，先填」
   const login=!!GCFG.client&&!ok,code=!S.code.trim();
   $('#g-login').hidden=!login;$('#g-code').hidden=login||!code;$('#gate').hidden=!(login||code);
   if(!login&&code){$('#g-cin').value='';$('#g-cmsg').textContent='';}
   return login||code;
 }
-$('#g-in').onclick=async()=>{
-  const b=$('#g-in'),m=$('#g-msg');
-  if(!window.google||!google.accounts){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
-  b.disabled=true;m.textContent='登入中…';
+// 登入並確認這個帳號能存進目標資料夾（Jay 定：沒有編輯權限就不能上傳）。沒點過的帳號 drive.file 會回 404 → 跳一次選擇器點它，之後就不會再跳。
+// 入口按「登入 Google」時做；入口選了「現場沒網路，先填」的，第一次按上傳時才做（gReady）。沒過就丟 {chk:給人看的說明}
+async function gCheck(say){
+  let tok;
   try{
-    // 登入後確認這個帳號能存進目標資料夾（Jay 定：沒有編輯權限就不能開始）。沒點過的帳號 drive.file 會回 404 → 在入口跳一次選擇器點它，驗屋途中就不會再跳
-    const tok=await gToken(gGateFail);const par=gFolder();m.textContent='確認雲端資料夾權限…';   // 上次沒過就讓他重選帳號（可能登錯帳號）
-    const can=()=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${par.id}?fields=capabilities(canAddChildren)`,{},tok),t=>m.textContent=t);
-    let r;try{r=await can()}catch(e){if(e!==404)throw e;m.textContent=`請在跳出的視窗點「${par.name}」。`;await gPick(tok,par);r=await can();}
+    tok=await gToken(gGateFail);const par=gFolder();say('確認雲端資料夾權限…');   // 上次沒過就讓他重選帳號（可能登錯帳號）
+    const can=()=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${par.id}?fields=capabilities(canAddChildren)`,{},tok),say);
+    let r;try{r=await can()}catch(e){if(e!==404)throw e;say(`請在跳出的視窗點「${par.name}」。`);await gPick(tok,par);r=await can();}
     if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
-    try{localStorage.setItem('yanwu-gok-w','1')}catch(e){}
-    gGateFail=0;gate();gAuto();
+    if(gtok===tok)gTokOk=tok;   // 等確認的時候 gtok 被別次登入換掉了：不改共用的確認狀態（不然會讓那枚已確認的失去背景上傳資格）
+    try{localStorage.setItem('yanwu-gok-w','1');localStorage.removeItem('yanwu-off')}catch(e){}
+    gGateFail=0;return tok;   // 回傳確認過的這枚（不再 gToken()：等確認的時候 gtok 可能被別次登入換掉）
   }catch(e){
-    gtok=null;gGateFail=1;   // 下次按：重新登入並可換帳號
-    const nm=gFolder().name,why=`可能是①登入的不是申請權限的那個帳號（再按一次登入會讓你重選帳號），或②這個帳號還沒被加成「${nm}」的編輯者（請資料夾擁有者加好後再按一次）。`;
-    m.textContent=e==='ro'?`這個帳號只能看、不能存進「${nm}」。${why}`:
+    if(gtok===tok||!gOk()){gtok=null;gGateFail=1;}   // 下次按：重新登入並可換帳號。重疊的另一次確認已經放行了別的權杖：不動它（這次的結果已過時）
+    const nm=gFolder().name,why=`可能是①登入的不是申請權限的那個帳號（再按一次會讓你重選帳號），或②這個帳號還沒被加成「${nm}」的編輯者（請資料夾擁有者加好後再按一次）。`;
+    throw {chk:e==='ro'?`這個帳號只能看、不能存進「${nm}」。${why}`:
       e==='cancel'||e===404?`沒有選到「${nm}」。如果選擇視窗裡找不到它，${why}`:
       e==='wrong'?`選到的不是「${nm}」。請再按一次，點「${nm}」（第一個分頁沒有的話，到其他分頁或用搜尋找「${nm}」）。都找不到的話，${why}`:
       e==='picker'?'Google 選資料夾的視窗載不出來或出錯（可能網路不穩），請再按一次。':
-      e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入或確認權限失敗（${gWhy(e)}），請再按一次。`;
-  }finally{b.disabled=false;}
+      e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':`登入或確認權限失敗（${gWhy(e)}），請再按一次。`};
+  }
+}
+// 上傳按鈕用：手上的權杖確認過就直接用，不然（重新整理過、過期、換帳號、現場先填的）先 gCheck。要在按下去的當下呼叫，登入視窗才不會被擋
+const gReady=say=>gOk()?gToken():gCheck(say);
+$('#g-in').onclick=async()=>{
+  const b=$('#g-in'),m=$('#g-msg');
+  if(gNo()){m.textContent=GNO;return;}
+  b.disabled=true;m.textContent='登入中…';
+  try{await gCheck(t=>m.textContent=t);gate();gAuto();}
+  catch(e){m.textContent=e&&e.chk||gWhy(e);}
+  finally{b.disabled=false;}
 };
+// 現場沒網路：先不登入，照常勾選、拍照；按上傳時才登入並確認權限（gReady）。記在這台裝置，重開網頁也不再擋
+$('#g-off').onclick=()=>{try{localStorage.setItem('yanwu-off','1')}catch(e){}gate();syncBtn();};
 $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
   if(!v){$('#g-cmsg').textContent='請先填代號。';return;}
   S.code=v;save();render();gate();};
 $('#g-cin').onkeydown=e=>{if(e.key==='Enter')$('#g-go').click();};
 $('#o-use').onclick=()=>{gLeave=1;location.reload();};   // 重新載入＝讀最新的資料並接手（載入時會把自己設成使用中的分頁）
 $('#gup').onclick=()=>{if(gate())return;const m=$('#gmsg'),b=$('#gup');
-  if(!window.google||!google.accounts||!window.gapi){m.textContent='Google 元件還沒載入，等幾秒再按一次。';return;}
-  const tp=gToken();b.disabled=true;m.textContent='準備上傳…';
+  if(gNo()){m.textContent=GNO;return;}
+  const tp=gReady(t=>m.textContent=t);b.disabled=true;m.textContent='準備上傳…';
   gSync(tp,true,t=>m.textContent=t).then(R=>{const miss=noPh();
     m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」：缺失清單已更新，照片 ${Object.keys(R.up).length} 張。${miss?`<b>還有 ${miss} 項沒拍照。</b>`:''}<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;},
     e=>{m.textContent=gFail(e,'first');}).finally(()=>b.disabled=false);};
 $('#sync').onclick=()=>{if(gate())return;
-  if(!window.google||!google.accounts||!window.gapi){toast('Google 元件還沒載入，等幾秒再按一次。');return;}
-  const tp=gToken();
+  if(gNo()){toast(GNO);return;}
+  const tp=gReady(toast);
   if(!gPend()){tp.then(()=>{syncShow();toast('已登入，進度會在幾秒內更新到雲端。');},e=>toast(gFail(e,'first')));return;}   // 只剩進度沒寫：登入就好，syncShow→progSoon 會寫
   gSync(tp,false,toast).then(()=>toast('照片都傳上去了。'),e=>toast(gFail(e,'first')));};
 $('#re-gup').onclick=()=>{if(gate())return;
@@ -1117,6 +1146,7 @@ renderRe();
 if(FIX)document.querySelectorAll('.nofix').forEach(e=>e.hidden=true);
 try{if(localStorage.getItem('yanwu-recheck')){localStorage.removeItem('yanwu-recheck');localStorage.removeItem('yanwu-gok-w');}}catch(e){}   // 上次上傳遇過 403／404：這次打開入口重新確認權限
 if(/^https?:$/.test(location.protocol))progStart();   // 本機測試（file://）不自動讀；測試裡手動呼叫 progGet()
+if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});   // 沒網路也打得開：sw.js 在手機存一份網頁
 gInit();
 gate();
 setMode(['guide','re'].includes(S.mode)?S.mode:'first');
