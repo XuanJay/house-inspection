@@ -123,8 +123,9 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 #other{z-index:60}
 #gate .card,#other .card{max-width:480px;margin:10vh auto 0}
 #gate button,#other button{font:inherit;padding:10px 16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
-#gate #g-in,#gate #g-go,#other #o-use{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
-#gate #g-off{width:100%;margin-top:10px}
+#gate #g-in,#gate #g-new,#gate #g-go,#other #o-use{background:var(--accent);border-color:var(--accent);color:var(--on-accent);width:100%}
+#gate #g-off,#gate #g-pick,#gate #g-chg{width:100%;margin-top:10px}
+#gate #g-terms{margin-top:16px;font-size:.85rem}
 #gate input{font:inherit;width:100%;box-sizing:border-box;padding:10px;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
 .top h1{margin:0}
@@ -133,6 +134,7 @@ body:not([data-mode="re"]) #re,body:not([data-mode="re"]) .m2,body[data-mode="gu
 .hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .hd h2{margin:0}
 .gd{margin-top:8px}
+#gf-msg{overflow-wrap:anywhere}
 .row button,.hd button,.gd button{font:inherit;font-size:.92rem;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);cursor:pointer}
 .ritem .btns button{width:auto;min-width:54px;padding:0 10px;font-size:.92rem}
 .rno{color:var(--bad);font-weight:700;margin-right:6px}
@@ -147,7 +149,10 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <h2>先登入 Google</h2>
     <p class="sub" id="g-why"></p>
     <button type="button" id="g-in">登入 Google</button>
+    <button type="button" id="g-new">登入並建立新資料夾</button>
+    <button type="button" id="g-pick">登入並選現有的資料夾</button>
     <p class="sub" id="g-msg" aria-live="polite"></p>
+    <button type="button" id="g-chg">改用別的資料夾</button>
     <button type="button" id="g-off">現場沒網路，先填</button>
     <p class="sub">先填的話，勾選和照片都先存在這支手機。回到有網路的地方按底下的「☁ 待傳」，那時才登入、確認權限、補傳。</p>
   </div>
@@ -158,6 +163,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
     <button type="button" id="g-go">開始</button>
     <p class="sub" id="g-cmsg" aria-live="polite"></p>
   </div>
+  <p class="sub" id="g-terms">這是自驗用的參考清單，不能取代專業驗屋，也不保證找得出所有缺失。使用前請看<a href="privacy.html#terms">使用條款</a>。</p>
 </div></div>
 <div id="other" hidden><div class="card">
   <h2>這個網頁在另一個分頁開著</h2>
@@ -197,7 +203,7 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
   <details class="sec" id="sec-cfg">
     <summary><span class="t">基本設定</span><span class="prog" id="cfg-sum"></span></summary>
     <div class="cfg">
-      <label class="nofix">樓層 <input type="number" min="1" max="6" data-fl> 層</label>
+      <label>樓層 <input type="number" min="1" max="6" data-fl> 層</label>
       <label>我的代號 <input type="text" id="code" maxlength="3" placeholder="A" autocapitalize="characters"></label>
       <label class="unit" hidden>戶別 <input type="text" id="unit" placeholder="例：A 棟 12F-3"></label>
     </div>
@@ -205,26 +211,33 @@ footer{color:var(--muted);font-size:.8rem;padding:8px 0 16px}
       <label><input type="checkbox" value="A">A 量測＋門窗</label><label><input type="checkbox" value="B">B 敲＋看表面</label>
       <label><input type="checkbox" value="E">C 大電</label><label><input type="checkbox" value="L">C 弱電</label><label><input type="checkbox" value="W">C 水</label>
     </div>
-    <div id="floors" class="nofix"></div>
+    <div id="floors"></div>
+    <div class="cfg" id="outd">室外 <label><input type="checkbox" value="garage">露天車庫</label><label><input type="checkbox" value="shutter">鐵捲門</label></div>
+    <div class="cfg gd" hidden>雲端資料夾：<b id="gf-n"></b><button type="button" id="gf-share">分享給同行者</button><button type="button" id="gf-chg">換資料夾</button></div>
+    <p class="sub gd" id="gf-msg" hidden aria-live="polite"></p>
+    <div class="cfg gd" hidden><label><input type="checkbox" id="ps">和同行者互看進度</label></div>
     <ul class="sub cfgnote">
       <li><b>我負責</b>：多人分工時勾自己負責的範圍，下面只列出那些項目（分法見「操作須知」的「多人分工與順序」）；都不勾就全部列出。匯出時照樣包含你按過 ✗ 的每一項。</li>
-      <li class="nofix"><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。</li>
+      <li><b>樓層</b>：公寓填 1；透天、樓中樓填層數。每層各填客廳、臥室、浴室、陽台的數量（沒有就填 0），下面就會列出對應的檢查區塊；兩層以上會多出「樓梯」和「屋頂平台」。廚房、配電箱、弱電箱全戶各一個。有露天車庫、鐵捲門就勾「室外」那兩格。用同行者分享的連結打開時，樓層、間數和室外會照分享的人設定的帶進來。</li>
       <li><b>我的代號</b>：兩個人分工時各填一個不同的字母，例如 A、B。按 ✗ 時編號會變成 A1、A2……，紙膠帶寫同一個編號；兩人的清單合併時才不會撞號，雲端硬碟的資料夾名稱也會帶它。沒填代號不能勾選、也不能上傳，一個人驗也要填。</li>
+      <li class="gd" hidden><b>雲端資料夾</b>：照片和清單存在這裡。第一個人建立或選好之後按「分享給同行者」，把連結傳給大家（連結裡也帶著樓層和間數）；還要在 Google 雲端硬碟裡把這個資料夾共用給同行者，權限選「編輯者」。同行者用那個連結打開、登入，點一次那個資料夾就好。換資料夾之後，照片和清單會重新傳到新的資料夾。</li>
+      <li class="gd" hidden><b>和同行者互看進度</b>：預設關著，每支手機要自己打開。打開後，這支手機會在雲端資料夾存一個進度檔（勾了哪些項目、插座數量、代號），並讀別支手機的進度檔，在項目底下標「已做：B ✓」。要讀得到，雲端資料夾必須設成「知道連結的人可以檢視」，拿到資料夾連結的人也就看得到裡面的照片和清單；不想這樣就不要打開。關掉之後，已經存到雲端的進度檔不會刪，別支手機最多 18 小時內還看得到你上次的進度。</li>
       <li hidden><b>戶別</b>：會寫在匯出清單的最上面，交給建商時對得上是哪一戶。</li>
     </ul>
   </details>
 
   <details class="sec" id="sec-flow">
     <summary><span class="t">驗屋當日流程</span></summary>
+    <p class="sub"><b>使用前請先知道</b>：這是個人整理的自驗參考清單，不是專業驗屋報告，也不保證找得出所有缺失；合格標準的數字多數轉述自驗屋公司的資料，以法規、合約和建商說明的原文為準。勾選和照片存在你的手機和你自己的 Google 雲端硬碟，作者看不到，也沒辦法幫你救回。在法律允許的範圍內，作者不負擔因使用這個網頁而造成的漏驗、資料遺失等損失。詳見<a href="privacy.html#terms">使用條款</a>。</p>
     <p class="sub">點 ✓＝合格、✗＝缺失（再點一次取消）；按了 ✓ 或 ✗ 會出現拍照鈕，按 ✗ 還會出現備註欄。沒有的項目跳過即可。勾選和照片只存在這台裝置的瀏覽器裡。</p>
     <ol class="flow">
-      <li>出發前在有網路的地方：用 Chrome（Android）或 Safari（iPhone）打開這個網頁，登入 Google、填好代號，現場就不用再登入。Android 可以在 Chrome 選單按「加到主畫面」或「安裝應用程式」，之後從主畫面的圖示打開。iPhone 用 Safari 開就好，先不要加到主畫面：主畫面上的版本跟 Safari 的資料不相通，Google 登入也可能不正常。打開過一次之後，現場沒網路也開得起來。</li>
+      <li>出發前在有網路的地方：用 Chrome（Android）或 Safari（iPhone）打開這個網頁。第一個人登入 Google 時建立（或選）這次驗屋的雲端資料夾，到「基本設定」按「分享給同行者」把連結傳給大家，並在 Google 雲端硬碟把那個資料夾共用給同行者（編輯者）；同行者用那個連結打開、登入，點一次那個資料夾。每個人填好代號，現場就不用再登入。Android 可以在 Chrome 選單按「加到主畫面」或「安裝應用程式」，之後從主畫面的圖示打開。iPhone 用 Safari 開就好，先不要加到主畫面：主畫面上的版本跟 Safari 的資料不相通，Google 登入也可能不正常。打開過一次之後，現場沒網路也開得起來。</li>
       <li>白天去，光線比較好；時間預留半天。</li>
       <li>先到配電箱，確認總開關與各迴路都有送電、水已經開。瓦斯或熱水器還沒開通的話，相關項目留到複驗。</li>
       <li>先做放水測試：水槽、洗手台、浴缸塞住放滿水；浴室地排用寬版膠帶封住、蓄一層水（低於門檻）。先放著，繞一圈回來再看下方有沒有漏、水位有沒有降。浴室的地磚、壁磚要先用驗屋錘敲過再蓄水，水放下去就敲不到了。</li>
       <li>從大門開始，一個空間一個空間照表走。</li>
       <li>每一項都要拍照，合格的也要：按 ✓ 或 ✗ 會直接開相機；還沒拍的項目會標「還沒拍照」，底下也會顯示幾項沒拍。遇到缺失：按 ✗，項目前面會出現編號（例如 A3）→ 把同一個編號寫在紙膠帶上貼好 → 拍一張遠景（看得出位置），再按「📷 拍照」補一張近景 → 備註寫位置與狀況。合格的也可以寫備註，例如位置、量到的數值。插座先在「插座」那組填這間有幾個，再一個一個測。表上沒有、但要記的東西，按每個區塊最後的「＋ 新增補充」，寫備註、拍照。按錯或這次不做的項目，按該項的「清除這項」，勾選、備註和照片會一起清掉。</li>
-      <li>別支手機做過的項目，會在項目底下標「已做：B ✓」（約每分鐘更新一次，要有網路）。勾「只看還沒做完的」，下面只列沒人做過、或還沒拍照的項目；自己那組做完，切到別組的分類、勾這個，就知道還剩哪些可以幫忙。</li>
+      <li>每支手機都在「基本設定」打開「和同行者互看進度」的話，別支手機做過的項目會在項目底下標「已做：B ✓」（約每分鐘更新一次，要有網路；雲端資料夾要設成「知道連結的人可以檢視」）。勾「只看還沒做完的」，下面只列沒人做過、或還沒拍照的項目；自己那組做完，切到別組的分類、勾這個，就知道還剩哪些可以幫忙。</li>
       <li>建商人員在場的話，缺失盡量當場一起確認，約好修繕方式，記在驗收單上（本表備註也寫一筆）。</li>
       <li>照片拍完就會自動上傳到雲端硬碟。登入超過大約一小時，或重新整理過頁面，要按底下的「☁ 待傳」才會繼續傳（會跳一次 Google 視窗）。現場沒網路也照常勾選、拍照，照片先存在手機；回到有網路的地方再按「☁ 待傳」補傳。照片不會進手機相簿，傳完之前不要清除瀏覽器的網站資料。走完按「匯出缺失清單」，再按「存到 Google 雲端硬碟」，把缺失清單存進同一個資料夾；看到「已存到」、底下也沒有「☁ 待傳」才算全部傳完。清單交給建商簽收，並約好複驗日期。複驗時切到最上面的「複驗」，貼上這份清單逐項核對。</li>
     </ol>
@@ -494,7 +507,7 @@ const DEF={
    ['水塔（若有）','固定牢靠、蓋子蓋好；底部和接管沒有滲漏']]]]}
 };
 DEF.lounge={t:'客廳',common:ROOMCOMMON,spec:[['設備',DEF.living.spec[1][1].filter(x=>['電視牆','落地窗'].includes(x[0]))]]};
-// 室外：只有 FIX 裡寫了 garage／shutter 才列（見 sections()）
+// 室外：基本設定勾了「露天車庫」「鐵捲門」（S.c.garage／shutter）才列（見 sections()）
 DEF.garage={t:'車庫（露天）',spec:[
  ['車庫地坪',[
   ['地面裂縫、破損','整片走一遍，看有沒有裂縫、坑洞、起砂（表面一摸就掉粉）'],
@@ -527,9 +540,12 @@ const RT={地坪平整:'A',牆面平整與垂直:'A',軌道排水:'W','淋水測
   地磚與外牆磚:'B',金屬件鏽斑:'B',扶手:'A',樓梯燈:'E',地面:'B','水塔（若有）':'W',
   '地面裂縫、破損':'B','車擋、標線（若有）':'B',馬達與控制箱:'E'};
 const role=(g,t)=>RT[t]||RG[g];
-// 現場算好的樓層與間數；設了就照這個、藏起樓層設定（null＝讓人自己填）。garage／shutter：1＝列出「車庫（露天）」「鐵捲門」
-// 目前這組是 Jay 給的假設，看介面用：1F 客廳＋一間廁所；2F、3F 各兩間套房（一間有陽台）；4F 一間房沒廁所、前後陽台；外面露天車庫＋鐵捲門
-const FIX={n:4,f:[{liv:1,bed:0,bath:1,balc:0},{liv:0,bed:2,bath:2,balc:1},{liv:0,bed:2,bath:2,balc:1},{liv:0,bed:1,bath:0,balc:2}],garage:1,shutter:1};
+// 樓層配置放進分享連結 l=：每層「客廳 臥室 浴室 陽台」各一位數、層與層用點隔開，最後 g＝露天車庫、s＝鐵捲門（例：1010.0221.gs）。
+// 同行者打開就是同一套空間（項目 key 一樣，互看進度、我負責才對得上）
+const layEnc=c=>c.f.slice(0,c.n).map(f=>''+f.liv+f.bed+f.bath+f.balc).join('.')+(c.garage||c.shutter?'.'+(c.garage?'g':'')+(c.shutter?'s':''):'');
+function layDec(s){const p=String(s||'').split('.'),fl=p.filter(x=>/^\d{4}$/.test(x)).slice(0,6),o=p.find(x=>/^[gs]+$/.test(x))||'';
+  if(!fl.length)return null;
+  return {n:fl.length,f:fl.map(x=>{const [a,b,c,d]=[...x].map(Number);return {liv:Math.min(a,3),bed:Math.min(b,6),bath:Math.min(c,6),balc:Math.min(d,6)}}),garage:+o.includes('g'),shutter:+o.includes('s')};}
 
 const KEY='yanwu-checklist-v1';
 // c.n＝樓層數；c.f[k]＝第 k+1 層的 {liv 客廳, bed 臥室, bath 浴室, balc 陽台}（f 可比 n 長，減層再加回來時數量還在）
@@ -537,7 +553,6 @@ const fresh=()=>({v:{},n:{},p:{},c:{n:1,f:[{liv:1,bed:3,bath:2,balc:1}]},unit:''
 let S=fresh();
 try{const o=JSON.parse(localStorage.getItem(KEY));if(o){S=Object.assign(fresh(),o);
   const c=o.c||{};S.c=c.f?c:{n:1,f:[{liv:1,bed:c.bed||3,bath:c.bath||2,balc:c.balc||1}]};}}catch(e){}   // 舊格式 {bed,bath,balc} → 1 層
-if(FIX)S.c=JSON.parse(JSON.stringify(FIX));
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 for(const k in S.v)if(S.v[k]===2&&!S.num[k])S.num[k]=++S.seq;
 const tag=k=>S.code.trim()+S.num[k];
@@ -600,6 +615,7 @@ function render(){
   $('#unit').value=S.unit;
   $('#code').value=S.code;
   document.querySelectorAll('#who input').forEach(x=>x.checked=S.who.includes(x.value));
+  document.querySelectorAll('#outd input').forEach(x=>x.checked=!!S.c[x.value]);
   update();
 }
 function setState(it,s){
@@ -669,6 +685,7 @@ document.addEventListener('change',e=>{
     if(v<old&&lost&&!confirm(`${t.dataset.on} ${v+1} 以後有勾選、備註或照片。數量改成 ${v} 之後它們不會匯出，已經傳上雲端的照片也會移到垃圾桶（數量改回來就會恢復）。確定？`)){t.value=old;return;}
     S.oc[key]=v;save();render();gAuto();}
   else if(t.closest('#who')){S.who=[...document.querySelectorAll('#who input:checked')].map(x=>x.value).join('');save();render();}
+  else if(t.closest('#outd')){S.c[t.value]=t.checked?1:0;save();render();gAuto();}
   else if(t.dataset.fl!==undefined){const v=Math.max(1,Math.min(6,parseInt(t.value,10)||1));S.c.n=v;while(S.c.f.length<v)S.c.f.push({liv:0,bed:2,bath:1,balc:1});save();render();}
   else if(t.dataset.rm){const mx=+t.max,v=Math.max(0,Math.min(mx,parseInt(t.value,10)||0));S.c.f[+t.dataset.f][t.dataset.rm]=v;t.value=v;save();render();}
 });
@@ -759,18 +776,23 @@ $('#camin').onchange=async()=>{
   update();gAuto();   // 拍完就傳
 };
 
-// Google 雲端硬碟：在你選的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 第N次複驗 代號 戶別」放複驗結果 .txt。
-// 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡選的資料夾）。預設存到 GDEF（Jay 指定寫死）；
+// Google 雲端硬碟：在這次驗屋的資料夾裡建「YYYY-MM-DD_HH:MM:SS 初驗 代號」放初驗結果 .txt＋照片，或建「… 第N次複驗 代號 戶別」放複驗結果 .txt。
+// 權限只用 drive.file（只碰這個網頁建的檔、和你在選擇器裡點的資料夾）。資料夾每組自己建或選，用分享連結帶給同行者；
 // 某個 Google 帳號第一次寫不進去（404＝還沒在選擇器點過它）時跳選擇器點一次，之後就直接寫。
 const GCFG={client:'646847553036-0vph35d7gra9s47685kejarac6g391hc.apps.googleusercontent.com',key:'AIzaSyD1DlPfWDK_CIHWvPiSH3Ps5B4Npa-UkWA',app:'646847553036'};   // ← Google Cloud 專案 xuanjay-house-inspection：OAuth 用戶端 ID、API 金鑰（限 Picker＋Drive API，限本站與 docs.google.com）、專案編號
-const GDEF={id:'1kwqVILFrtsBm2HxXJgSiyDfwUSAb2kVj',name:'雲林驗屋'};
-let gtok=null,gexp=0;
-const gFolder=()=>GDEF;   // 一律存到寫死的 GDEF（第 45 版起不再記住選擇器選的別的資料夾，免得照片傳到錯的地方）
-function gShowTo(){document.querySelectorAll('.gto').forEach(e=>e.textContent=`存到：${gFolder().name}（如果跳出 Google 視窗，選你登入的帳號）`);}   // 進畫面時已登入；權杖只在記憶體、約 1 小時，存檔時可能再跳一次
+let gtok=null,gexp=0,gfGen=0;
+// 這次驗屋的資料夾 {id,name} 存在這台裝置（yanwu-gf）：入口建立／選的，或分享連結 ?f=&n= 帶進來的。確認過能存進去的是哪一個，記在 yanwu-gok-w（資料夾 id）
+const gFolder=()=>{try{const o=JSON.parse(localStorage.getItem('yanwu-gf'));return o&&o.id?o:null}catch(e){return null}};
+const gName=F=>F&&F.name||'分享的資料夾';
+// 換了資料夾：確認過的權杖不能拿去寫新的資料夾（gTokOk 清掉，按上傳時重新確認）；別支手機的進度改讀新的（還在讀的舊結果不採用）
+function gfSet(F){const o=gFolder();if((o&&o.id)!==(F&&F.id)){gfGen++;gTokOk=null;gJoin=null;progGen++;OTH={};progErr='';}
+  try{if(F)localStorage.setItem('yanwu-gf',JSON.stringify({id:F.id,name:F.name||'',...(F.via?{via:1}:{})}));else localStorage.removeItem('yanwu-gf')}catch(e){}   // via＝連結帶來、還沒確認過
+  gShowTo();paintOth();syncBtn();}
+function gShowTo(){const F=gFolder();$('#gf-n').textContent=F?gName(F):'還沒選';
+  document.querySelectorAll('.gto').forEach(e=>e.textContent=F?`存到：${gName(F)}（如果跳出 Google 視窗，選你登入的帳號）`:'還沒選雲端資料夾：按了會先請你建立或選一個。');}   // 權杖只在記憶體、約 1 小時，存檔時可能再跳一次
 function gInit(){
   if(!GCFG.client)return;
   document.querySelectorAll('.gd').forEach(e=>e.hidden=false);gShowTo();
-  $('#g-why').textContent=`照片拍完就會存到「${gFolder().name}」，所以要先登入 Google，並確認這個帳號是那個資料夾的編輯者。第一次會跳出選資料夾的視窗，點「${gFolder().name}」就好。每支手機只要做一次。`;
   gLoad();addEventListener('online',gLoad);
 }
 // 載入 Google 元件。打開網頁時沒網路就載不到；載入失敗、或載完了元件卻沒出來（例如被導到登入頁）的 script 拿掉，
@@ -789,14 +811,15 @@ function gToken(pick){return new Promise((ok,ng)=>{   // pick：讓使用者重�
     error_callback:e=>{if(late)return;clearTimeout(t);ng(e&&e.type||'popup')}}).requestAccessToken(pick?{prompt:'select_account'}:undefined);});}
 let gTokMs=120000;
 // 讓這個帳號在選擇器裡點一次 want（drive.file 要點過才能寫）。第一個分頁只列它（setFileIds），第二個分頁是一般清單備用；
-// 點到別的資料夾不算（丟 'wrong'，不會改存放位置）。選擇器報錯、或 3 分鐘都沒結果，丟 'picker'，入口按鈕才能再按
+// 點到別的資料夾不算（丟 'wrong'，不會改存放位置）。want 是 null＝入口「選現有的資料夾」：點哪個就回哪個 {id,name}。
+// 選擇器報錯、或 3 分鐘都沒結果，丟 'picker'，入口按鈕才能再按
 function gPick(tok,want){return new Promise((ok,ng)=>gapi.load('picker',{timeout:20000,ontimeout:()=>ng('picker'),onerror:()=>ng('picker'),callback:()=>{   // 網路不穩載不到也要結束，不然佇列會卡住
   const P=google.picker,fv=()=>new P.DocsView(P.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true),pb=new P.PickerBuilder();
-  const only=fv();if(typeof only.setFileIds==='function')pb.addView(only.setFileIds(want.id));
+  const only=fv();if(want&&typeof only.setFileIds==='function')pb.addView(only.setFileIds(want.id));
   let pk=null;const t=setTimeout(()=>{try{pk.setVisible(false);pk.dispose()}catch(e){}ng('picker')},gPickMs);   // 逾時也把選擇視窗關掉，不然蓋住頁面按不到
-  pk=pb.addView(fv()).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle(`請點「${want.name}」`)
+  pk=pb.addView(fv()).setOAuthToken(tok).setDeveloperKey(GCFG.key).setAppId(GCFG.app).setTitle(want?`請點「${gName(want)}」`:'選這次驗屋要用的資料夾')
     .setCallback(d=>{
-      if(d.action===P.Action.PICKED){clearTimeout(t);if(d.docs[0].id===want.id)ok(want);else ng('wrong');}
+      if(d.action===P.Action.PICKED){clearTimeout(t);const d0=d.docs[0];if(!want)ok({id:d0.id,name:d0.name||''});else if(d0.id===want.id)ok(want);else ng('wrong');}
       else if(d.action===P.Action.CANCEL){clearTimeout(t);ng('cancel');}
       else if(P.Action.ERROR&&d.action===P.Action.ERROR){clearTimeout(t);ng('picker');}}).build();
   pk.setVisible(true);}}));}
@@ -813,8 +836,8 @@ const gNet=e=>e instanceof TypeError||(e&&e.name==='AbortError');   // 網路斷
 //   re＝複驗傳到一半時記的 {label,t,f,par,name,done:[檔名]}，再按就接著傳
 const gRes=k=>{try{return (JSON.parse(localStorage.getItem('yanwu-gres'))||{})[k]}catch(e){}};
 const gResSet=(k,v)=>{try{const o=JSON.parse(localStorage.getItem('yanwu-gres'))||{};if(v)o[k]=v;else delete o[k];localStorage.setItem('yanwu-gres',JSON.stringify(o))}catch(e){}};
-// 第 42 版留下的「傳到一半」（只有 done、沒有 up）不認；舊版選過別的資料夾、資料夾不在 GDEF 底下的紀錄也不認（免得照片傳到舊地方），當作還沒開始
-const gHome=R=>!R.par||R.par.id===GDEF.id;
+// 第 42 版留下的「傳到一半」（只有 done、沒有 up）不認；不在目前這個資料夾底下的紀錄（換過資料夾、舊版）也不認（免得照片傳到舊地方），當作還沒開始
+const gHome=R=>{const F=gFolder();return !!(F&&R.par&&R.par.id===F.id)};
 const gFirst=()=>{const R=gRes('first');return R&&R.up&&gHome(R)?R:null};
 const gWhy=e=>e&&e.name==='AbortError'?'網路太慢，逾時':e instanceof TypeError?'網路中斷':e>=500||e===429?'Google 暫時忙碌':e===403?'這個帳號沒有權限存進這個資料夾':String(e);
 let gBusy=0,gLeave=0,gGen=0,gStale=0;addEventListener('beforeunload',e=>{if(gBusy&&!gLeave){e.preventDefault();e.returnValue='';}});   // 上傳中要離開頁面先問
@@ -834,10 +857,11 @@ const gUp=(x,parent,tok)=>{const fd=new FormData();fd.append('metadata',new Blob
 const gMeta=(id,body,tok)=>gApi(`https://www.googleapis.com/drive/v3/files/${id}?fields=id`,{method:'PATCH',headers:gJSON,body:JSON.stringify(body)},tok);
 // 建資料夾；帳號沒在選擇器點過目標資料夾（drive.file 回 404）就跳一次選擇器
 async function gMk(name,tok,say,chk=()=>{}){   // chk：選完資料夾、再建之前檢查（例如中途按了清除就丟出去，不多建一個空資料夾）
-  let par=gFolder();
+  let par=gFolder();if(!par)throw 'nofolder';   // 排隊等的時候按了「換資料夾」
   const mk=p=>gApi('https://www.googleapis.com/drive/v3/files?fields=id,webViewLink',{method:'POST',headers:gJSON,body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[p.id]})},tok);
   try{return {par,f:await mk(par)}}catch(e){if(e!==404)throw e;
-    say(`這個 Google 帳號第一次存到「${par.name}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`);
+    chk();   // 等 404 的時候按了清除、換了資料夾或被別的分頁接手：不跳選擇器
+    say(`這個 Google 帳號第一次存到「${gName(par)}」，請在跳出的視窗點一次這個資料夾，之後就不用再點。`);
     par=await gPick(tok,par);chk();return {par,f:await mk(par)};}
 }
 // 上傳中螢幕不關，避免手機把頁面停掉；不等它（有的瀏覽器會卡住或不支援）。回傳「放掉」
@@ -848,30 +872,33 @@ function gFail(e,kind){
   if(e===404)gResSet(kind,null);
   // 403／404：可能權限被拿掉或換了沒權限的帳號（403 也可能只是 Google 限速）→ 只記「下次打開網頁時入口重新確認」，不在驗屋途中擋人
   if(e===403||e===404)try{localStorage.setItem('yanwu-recheck','1')}catch(x){}
-  if(e==='reset')return '已按清除，這次上傳停止了。';
+  if(e==='reset')return '已按清除或換了雲端資料夾，這次上傳停止了。';
+  if(e==='nofolder')return '還沒選雲端資料夾，這次上傳停止了。';
   if(e==='nocode')return '代號是空的，先暫停上傳；在基本設定填回代號就會繼續。';
   if(e==='stale')return '這個網頁在另一個分頁開著，這一頁已停用。';
   if(e==='idb')return '手機上的照片還沒讀完，等幾秒再按一次。';
   if(e==='picker')return 'Google 選資料夾的視窗載不出來（可能網路不穩），請再按一次。';
-  if(e==='wrong')return `選到的不是「${gFolder().name}」，請再按一次並點「${gFolder().name}」（第一個分頁沒有的話，到其他分頁或用搜尋找）。`;
+  if(e==='wrong'){const n=gName(gFolder());return `選到的不是「${n}」，請再按一次並點「${n}」（第一個分頁沒有的話，到其他分頁或用搜尋找）。`;}
   return e==='cancel'?'沒有選資料夾，已取消。':e===404?'找不到雲端上的資料夾（可能被刪或沒權限），下次會重新建一個。':e==='popup'||e==='popup_closed'?'Google 登入視窗被關掉或被擋，請再按一次。':
     `上傳到一半停了（${gWhy(e)}）；勾選和照片都還在手機上，再按一次會接著傳剩下的。`;
 }
 // 複驗：b＝按鈕、m＝訊息欄、make(d)＝[要上傳的檔, 全部傳完才呼叫的 done]；d＝資料夾時間，txt 用同一個
 async function gSave(b,m,kind,label,make){
+  if(gNoF())return;
   if(gNo()){m.textContent=GNO;return;}
   const say=t=>m.textContent=t,tp=gReady(say);   // 按下去的當下就要呼叫，登入視窗才不會被擋
+  const fid=gFolder().id,fg=gfGen,same=()=>{if(gStale)throw 'stale';if(gfGen!==fg||(gFolder()||{}).id!==fid)throw 'reset';};   // 途中換過資料夾、或被別的分頁接手：停（建好的子資料夾不記、不再上傳或重試，回來的結果也不寫回）
   b.disabled=true;gBusy++;m.textContent='準備上傳…';const unwake=gWake();
   try{
-    const tok=await tp;
+    const tok=await tp;same();
     let R=gRes(kind);if(R&&(R.label!==label||!gHome(R)))R=null;
     const d=R?new Date(R.t):new Date(),[files,done]=make(d);
-    if(!R){const name=`${gStamp(d)} ${label}`;say('建立資料夾…');const {par,f}=await gMk(name,tok,say);R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);}
+    if(!R){const name=`${gStamp(d)} ${label}`;say('建立資料夾…');const {par,f}=await gMk(name,tok,say,same);same();R={label,t:d.getTime(),f,par,name,done:[]};gResSet(kind,R);}
     for(const x of files.filter(x=>!R.done.includes(x.name))){
       say(`上傳中 ${R.done.length+1}/${files.length}…`);
-      await gTry(()=>gUp(x,R.f.id,tok),say);R.done.push(x.name);gResSet(kind,R);
+      await gTry(()=>{same();return gUp(x,R.f.id,tok)},say);same();R.done.push(x.name);gResSet(kind,R);   // 回應回來時已換了資料夾：不寫回（共用的 re 紀錄可能已經是新資料夾的）
     }
-    gResSet(kind,null);done();
+    same();gResSet(kind,null);done();
     m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」，共 ${files.length} 個檔案。<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;
   }catch(e){m.textContent=gFail(e,kind);}
   finally{b.disabled=false;gBusy--;unwake();}
@@ -880,8 +907,9 @@ async function gSave(b,m,kind,label,make){
 // tp＝gToken() 的 promise（按鈕裡要當下呼叫）。同一時間只跑一個，後來的排隊
 let gQ=Promise.resolve(),gAutoT=0;
 // gen＝排進去當下的「清除」次數：排隊等的時候按了清除，輪到它時 live() 就會停下（不然會把清除後的狀態當成新一輪、建出空資料夾）
-function gSync(tp,withTxt,say){const gen=gGen,j=gQ.then(()=>gSync1(tp,withTxt,say,gen));gQ=j.catch(()=>{});return j;}
-async function gSync1(tp,withTxt,say,gen){
+// fid／fg＝排進去當下的資料夾與換資料夾次數：權杖是對那個資料夾確認的，之後換過資料夾（排隊中、傳到一半都算，換走又換回來也算）就停
+function gSync(tp,withTxt,say){const gen=gGen,fid=(gFolder()||{}).id,fg=gfGen,j=gQ.then(()=>gSync1(tp,withTxt,say,gen,fid,fg));gQ=j.catch(()=>{});return j;}
+async function gSync1(tp,withTxt,say,gen,fid,fg){
   gBusy++;const unwake=gWake();syncShow();
   try{
     const tok=await tp;
@@ -889,14 +917,15 @@ async function gSync1(tp,withTxt,say,gen){
     await Promise.race([phLoaded,new Promise((_,ng)=>setTimeout(()=>ng('idb'),10000))]);
     // 中途按了「清除」（gGen 變了、或存的狀態不見／換了一輪）或別的分頁改了資料：每個請求（含重試）前都檢查，停下來、不寫回、不再動雲端
     let R=gFirst();
-    const live=()=>{if(gen!==gGen)throw 'reset';if(gStale)throw 'stale';if(R){const c=gFirst();if(!c||c.sid!==R.sid)throw 'reset';}};
+    const same=()=>{if(gfGen!==fg||(gFolder()||{}).id!==fid)throw 'reset';};
+    const live=()=>{if(gen!==gGen)throw 'reset';if(gStale)throw 'stale';same();if(R){const c=gFirst();if(!c||c.sid!==R.sid)throw 'reset';}};
     // 代號被清空：不再「發出」請求（排隊中、傳到一半都一樣），不然照片檔名和清單會變成沒有代號。
     // 只擋在發請求前；put()（記下已經傳成功的）不擋，不然雲端已經改了、手機卻沒記到
     const nc=()=>{if(!S.code.trim())throw 'nocode';};
     const T=fn=>gTry(()=>{live();nc();return fn()},say),put=()=>{live();gResSet('first',R);};
     live();nc();
     if(!R){const d=new Date(),code=S.code.trim(),name=`${gStamp(d)} 初驗${code?' '+code:''}`;say('建立資料夾…');
-      const chk=()=>{if(gen!==gGen||gStale)throw gStale?'stale':'reset';};
+      const chk=()=>{if(gen!==gGen||gStale)throw gStale?'stale':'reset';same();};
       // 傳給 gMk 的檢查在「再建一次之前」跑，多查代號（404 後選資料夾再建的途中代號被清空就不建）；
       // 建好之後那次只查清除／分頁：資料夾已經在雲端了，代號空也要記下來，不然重試會多建一個
       const {par,f}=await gMk(name,tok,say,()=>{chk();nc();});chk();   // 建資料夾途中按了清除：不要把這個資料夾記成新的一輪
@@ -937,8 +966,9 @@ async function gSync1(tp,withTxt,say,gen){
 }
 // 權杖還有效、而且就是 gCheck 確認過能存進資料夾的那一枚（gTokOk）：背景傳不會跳視窗。
 // 確認綁在權杖上、不綁裝置：重新登入、換了帳號、兩次確認重疊時，沒確認過的那枚都不會被拿去背景寫；按上傳鈕會先走 gCheck（gReady）
-let gTokOk=null;
-const gOk=()=>!!(gtok&&Date.now()<gexp&&gtok===gTokOk);
+// 也綁資料夾（gTokF）：別的分頁把共用的資料夾換掉時，這頁的權杖就不能再拿去寫（這頁記憶體裡的 gTokOk 不會被別頁清掉）
+let gTokOk=null,gTokF=null,gJoin=null;
+const gOk=()=>!!(gtok&&Date.now()<gexp&&gtok===gTokOk&&(gFolder()||{}).id===gTokF);
 function gPend(){if(!phReady)return 0;const R=gFirst()||{up:{}},w=phList(),ids=new Set(w.map(x=>x.pid));
   return w.filter(x=>!R.up[x.pid]||R.up[x.pid].name!==x.name).length+Object.keys(R.up).filter(p=>!ids.has(p)).length
     +(phFull&&R.txt&&R.tx!==defectText(new Date(R.t))?1:0);}   // 雲端的缺失清單舊了也算一項待傳
@@ -955,8 +985,10 @@ function gAuto(){
     if(gOk()&&S.code.trim()&&(gPend()||gBusy&&gFirst()))gSync(gToken(),false,t=>{if(!/^(上傳照片|建立資料夾)/.test(t))toast(t)}).catch(e=>toast(gFail(e,'first')));},800);
 }
 // ── 看別支手機的進度（Jay 選「雲端自動同步」）──
-// 寫：每支手機把自己的勾選寫成雲林驗屋底下一個「驗屋進度-<裝置>.json」（要登入；drive.file 只能寫這個網頁自己建的檔）。
-// 讀：drive.file 看不到別人建的檔，所以不用登入、用 API 金鑰匿名列檔＋讀內容——前提是資料夾維持「知道連結的人可檢視」。
+// 預設關著，在基本設定打開「和同行者互看進度」（yanwu-ps，記在這台裝置）才讀寫：資料夾要公開給知道連結的人看，要使用者自己決定。
+// 寫：每支手機把自己的勾選寫成雲端資料夾底下一個「驗屋進度-<裝置>.json」（要登入；drive.file 只能寫這個網頁自己建的檔）。
+// 讀：drive.file 看不到別人建的檔，所以不用登入、用 API 金鑰匿名列檔＋讀內容——前提是資料夾設成「知道連結的人可檢視」。
+const pOn=()=>{try{return localStorage.getItem('yanwu-ps')==='1'}catch(e){return false}};
 const PROG='驗屋進度',PROG_MAX=18*3600e3;   // ponytail: 18 小時沒更新的手機當作不在了（昨天的測試）；驗屋跨天再調
 let progDev=null,progT=0,progQ=Promise.resolve(),OTH={},progErr='';
 const pDev=()=>progDev||(progDev=(()=>{try{let d=localStorage.getItem('yanwu-dev');if(!d){d=phId();localStorage.setItem('yanwu-dev',d);}return d}catch(e){return phId()}})());
@@ -967,29 +999,35 @@ function progBody(){const v={},oc={};
   return JSON.stringify({dev:pDev(),code:S.code.trim(),v,oc});}
 // 雲端已有的進度舊了（例：登入過期時按了清除）：算一項「☁ 待傳」，不然別支手機會一直被舊標記擋掉要做的項目。
 // 還沒寫過進度檔的不算（別人看不到它，不會誤判；下次登入自然會寫）
-function progDirty(){if(!GCFG.client||!phFull||!S.code.trim())return false;let P={};try{P=JSON.parse(localStorage.getItem('yanwu-prog'))||{}}catch(e){}return !!P.id&&P.body!==progBody();}
+function progDirty(){const F=gFolder();if(!pOn()||!F||!GCFG.client||!phFull||!S.code.trim())return false;let P={};try{P=JSON.parse(localStorage.getItem('yanwu-prog'))||{}}catch(e){}return !!P.id&&P.par===F.id&&P.body!==progBody();}
 function progSoon(){if(!GCFG.client||!gOk())return;clearTimeout(progT);progT=setTimeout(()=>{progQ=progQ.then(progPut).catch(e=>{if(e===401)gtok=null;syncBtn();})},3000);}   // 401＝權杖被 Google 拒絕：丟掉它，按「☁ 待傳」才會重新登入
 async function progPut(){
-  if(!gOk()||gStale||!S.code.trim()||!phFull)return;   // 照片沒完整讀到：不寫（會把做完的寫成沒做）
+  const F=gFolder();
+  if(!pOn()||!F||!gOk()||gStale||!S.code.trim()||!phFull)return;   // 照片沒完整讀到：不寫（會把做完的寫成沒做）
   let P={};try{P=JSON.parse(localStorage.getItem('yanwu-prog'))||{}}catch(e){}
+  if(P.par!==F.id)P={par:F.id};   // 換了資料夾（或第 47 版以前寫在舊資料夾的）：在這個資料夾另建一個
   const body=progBody(),tok=gtok;if(P.id&&P.body===body)return;
-  if(P.id)await gTry(()=>gApi(`https://www.googleapis.com/upload/drive/v3/files/${P.id}?uploadType=media&fields=id`,{method:'PATCH',headers:gJSON,body},tok),()=>{}).catch(e=>{if(e!==404)throw e;P.id=null;});
-  if(!P.id)P.id=(await gTry(()=>gUp(new File([body],`${PROG}-${pDev()}.json`,{type:'application/json'}),GDEF.id,tok),()=>{})).id;
+  const fg=gfGen,live=()=>{if(gStale||!pOn()||gfGen!==fg||(gFolder()||{}).id!==F.id)throw 'off';};   // 每個請求（含重試、404 後補建）發出前：被別的分頁接手、關掉互看或換過資料夾（換走又換回來也算）就不發
+  if(P.id)await gTry(()=>{live();return gApi(`https://www.googleapis.com/upload/drive/v3/files/${P.id}?uploadType=media&fields=id`,{method:'PATCH',headers:gJSON,body},tok)},()=>{}).catch(e=>{if(e!==404)throw e;P.id=null;});
+  if(!P.id)P.id=(await gTry(()=>{live();return gUp(new File([body],`${PROG}-${pDev()}.json`,{type:'application/json'}),F.id,tok)},()=>{})).id;
+  if(gStale)return;   // 回應回來時已被別的分頁接手：不寫共用的進度紀錄（新分頁可能已經記了自己的）
   P.body=body;try{localStorage.setItem('yanwu-prog',JSON.stringify(P))}catch(e){}
   syncBtn();   // 寫的途中又改了、權杖剛好過期：按鈕要繼續顯示待傳
 }
 let progGen=0;
 async function progGet(){
-  if(!GCFG.key)return;
-  // 定時、切回前景、按更新可能同時在讀：只用「最後開始的那一次」的結果（先開始的可能比較晚回來、內容比較舊）
+  const F=gFolder();
+  if(gStale||!GCFG.key||!pOn()||!F)return;
+  // 定時、切回前景、按更新可能同時在讀：只用「最後開始的那一次」的結果（先開始的可能比較晚回來、內容比較舊）；關掉互看、換資料夾也會讓還在讀的作廢
   const my=++progGen,api='https://www.googleapis.com/drive/v3/files',key='key='+encodeURIComponent(GCFG.key),
-    q=encodeURIComponent(`'${GDEF.id}' in parents and name contains '${PROG}' and trashed=false`),
+    q=encodeURIComponent(`'${F.id}' in parents and name contains '${PROG}' and trashed=false`),
     // 逾時 15 秒涵蓋到讀完內容（只等到標頭的話，內容卡住會一直等）；各檔同時讀，一輪最多約 30 秒，短於 45 秒的間隔
     getJ=u=>{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),15000);return fetch(u,{cache:'no-store',signal:ac.signal}).then(r=>{if(!r.ok)throw r.status;return r.json()}).finally(()=>clearTimeout(t));};
   let N={},err='';
   try{
     const now=Date.now(),fs=((await getJ(`${api}?q=${q}&fields=files(id,name,modifiedTime)&pageSize=200&${key}`)).files||[])
       .filter(f=>f.name!==`${PROG}-${pDev()}.json`&&now-Date.parse(f.modifiedTime)<PROG_MAX);
+    if(my!==progGen||gStale||!pOn())return;   // 列檔回來時已關掉互看、換了資料夾，或別的分頁接手後關掉了（這頁的 progGen 不會被別頁改）：不再讀各檔
     await Promise.all(fs.map(async f=>{
       const t=Date.parse(f.modifiedTime),o=OTH[f.id];
       if(o&&o.mt===f.modifiedTime){N[f.id]=o;return;}   // 沒改過就不重讀
@@ -997,22 +1035,27 @@ async function progGet(){
         if(d&&d.v&&typeof d.v==='object')N[f.id]={mt:f.modifiedTime,t,dev:String(d.dev||f.id),code:String(d.code||'?'),v:d.v,oc:d.oc&&typeof d.oc==='object'?d.oc:{}};}
       catch(e){if(o)N[f.id]=o;err='有手機的進度這次沒讀到，先顯示上次讀到的';}
     }));
-  }catch(e){N=OTH;err='讀不到別支手機的進度（網路不穩，或「'+GDEF.name+'」不是「知道連結的人可檢視」），先顯示上次讀到的';}
+  }catch(e){N=OTH;err='讀不到別支手機的進度（網路不穩，或「'+gName(F)+'」不是「知道連結的人可檢視」），先顯示上次讀到的';}
   if(my!==progGen)return;
   OTH=N;progErr=err;paintOth();
 }
 function paintOth(){
-  const box=$('#oth');box.hidden=!GCFG.key;if(box.hidden)return;
+  const on=!!GCFG.key&&pOn()&&!!gFolder();$('#oth').hidden=!on;
+  if(!on){$('#todo').checked=false;$('#rooms').classList.remove('todo');}   // 關掉互看：標記、「只看還沒做完的」都拿掉
   const me=S.code.trim(),by={},now=Date.now();
-  for(const o of Object.values(OTH))if(o.dev!==pDev()&&o.code!==me&&now-o.t<PROG_MAX&&!(by[o.dev]&&by[o.dev].t>=o.t))by[o.dev]=o;
+  if(on)for(const o of Object.values(OTH))if(o.dev!==pDev()&&o.code!==me&&now-o.t<PROG_MAX&&!(by[o.dev]&&by[o.dev].t>=o.t))by[o.dev]=o;
   const os=Object.values(by);
   document.querySelectorAll('#rooms .item').forEach(it=>{const k=it.dataset.k,m=os.filter(o=>o.v[k]).map(o=>`${o.code} ${o.v[k]===2?'✗':'✓'}`);
     it.classList.toggle('byoth',m.length>0);it.querySelector('.oth').textContent=m.length?'已做：'+m.join('、'):'';});
   document.querySelectorAll('[data-ocoth]').forEach(e=>{const id=e.dataset.ocoth,m=os.filter(o=>o.oc[id]).map(o=>`${o.code} 填 ${o.oc[id]}`);e.textContent=m.length?`（${m.join('、')}）`:'';});
   const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?'剛剛':m<60?`${m} 分鐘前`:`${Math.floor(m/60)} 小時前`};
-  $('#othw').textContent=(os.length?'別支手機：'+os.map(o=>`${o.code}（${ago(o.t)}）`).join('、'):'還沒看到別支手機的進度')+(progErr?'。'+progErr:'');
+  if(on)$('#othw').textContent=(os.length?'別支手機：'+os.map(o=>`${o.code}（${ago(o.t)}）`).join('、'):'還沒看到別支手機的進度')+(progErr?'。'+progErr:'');
   othCount();
 }
+$('#ps').checked=pOn();
+$('#ps').onchange=e=>{const on=e.target.checked;   // 開或關都讓還在讀的那次作廢（progGen）
+try{if(on)localStorage.setItem('yanwu-ps','1');else localStorage.removeItem('yanwu-ps')}catch(x){}
+  progGen++;OTH={};progErr='';paintOth();syncBtn();if(on){$('#othw').textContent='更新中…';progGet();progSoon();}};
 function othCount(){$('#todon').textContent=document.querySelectorAll('#rooms .item:is(.noph,:not(.byoth)[data-s="0"])').length;}
 function progStart(){progGet();setInterval(()=>{if(!document.hidden)progGet()},45000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)progGet()});}
 $('#todo').onchange=e=>$('#rooms').classList.toggle('todo',e.target.checked);
@@ -1020,31 +1063,58 @@ $('#othr').onclick=()=>{$('#othw').textContent='更新中…';progGet();};
 let toastT=0;
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,6000);}
 const noPh=()=>sections().reduce((a,s)=>a+s.groups.reduce((b,[,items,gk])=>b+items.filter((x,i)=>{const k=k3(s.id,gk,ik(x,i));return S.v[k]&&!(PH[k]||[]).length}).length,0),0);
-// 進畫面先過兩關才能用：登入 Google 並確認能存進資料夾（或選「現場沒網路，先填」，上傳時才確認；都記在這台裝置）、填我的代號。
+// 進畫面先過兩關才能用：登入 Google 並確認能存進這次驗屋的資料夾（或選「現場沒網路，先填」，上傳時才確認；都記在這台裝置）、填我的代號。
 // 之後在基本設定把代號清空的話，按 ✓／✗ 或存到雲端硬碟時會再擋一次。回傳 true＝擋住了
+let gAsk=0;   // 先填的人按上傳時還沒有資料夾、或按了「換資料夾」：把入口再打開（建好、選好或按「先填」就關）
 function gate(){
-  let ok=null;try{ok=localStorage.getItem('yanwu-gok-w')||localStorage.getItem('yanwu-off')}catch(e){}   // -w：登入且確認過能存進資料夾（第 44 版起；換了 key，舊的「只登入過」的手機要重新確認一次）；off：選了「現場沒網路，先填」
-  const login=!!GCFG.client&&!ok,code=!S.code.trim();
+  const F=gFolder();let ok=null;
+  try{ok=F&&localStorage.getItem('yanwu-gok-w')===F.id||localStorage.getItem('yanwu-off')}catch(e){}   // -w：確認過能存進哪個資料夾（存 id，換了資料夾要再確認）；off：選了「現場沒網路，先填」
+  const login=!!GCFG.client&&(!ok||!!gAsk),code=!S.code.trim();
   $('#g-login').hidden=!login;$('#g-code').hidden=login||!code;$('#gate').hidden=!(login||code);
+  $('#g-in').hidden=$('#g-chg').hidden=!F;$('#g-new').hidden=$('#g-pick').hidden=!!F;
+  $('#g-why').textContent=F?`照片和清單會存到 Google 雲端硬碟的「${gName(F)}」。先登入 Google，確認這個帳號可以存進去；第一次會跳出選資料夾的視窗，點「${gName(F)}」就好。每支手機只要做一次。`:
+    '照片和清單會存到 Google 雲端硬碟。第一個人登入後建立這次驗屋的資料夾（或選一個已有的），再到「基本設定」按「分享給同行者」把連結傳給大家；同行者用那個連結打開，就會存到同一個資料夾。';
   if(!login&&code){$('#g-cin').value='';$('#g-cmsg').textContent='';}
   return login||code;
 }
-// 登入並確認這個帳號能存進目標資料夾（Jay 定：沒有編輯權限就不能上傳）。沒點過的帳號 drive.file 會回 404 → 跳一次選擇器點它，之後就不會再跳。
-// 入口按「登入 Google」時做；入口選了「現場沒網路，先填」的，第一次按上傳時才做（gReady）。沒過就丟 {chk:給人看的說明}
-async function gCheck(say){
-  let tok;
+const gNoF=()=>{if(gFolder())return false;gAsk=1;$('#g-msg').textContent='先建立或選這次驗屋的雲端資料夾，才能上傳。';gate();return true;};   // 上傳鈕用：還沒有資料夾就開入口
+// 登入並確認這個帳號能存進這次驗屋的資料夾（沒有編輯權限就不能上傳）。沒點過的帳號 drive.file 會回 404 → 跳一次選擇器點它，之後就不會再跳。
+// how：'new'＝先在雲端硬碟最上層建一個「驗屋 YYYY-MM-DD」、'pick'＝先在選擇器選一個；沒給＝記著的那個。確認過才記成這次的資料夾。
+// 入口按鈕時做；入口選了「現場沒網路，先填」的，第一次按上傳時才做（gReady）。沒過就丟 {chk:給人看的說明}
+async function gCheck(say,how){
+  let tok,par=how?null:gFolder(),said='',np=0;const fg=gfGen,nn=`驗屋 ${gStamp(new Date()).slice(0,10)}`,
+    joined=!!par&&gJoin===par.id;   // 「看過說明、再按一次」要在按下去的當下就成立：同時在等的另一次確認不能沾光
   try{
-    tok=await gToken(gGateFail);const par=gFolder();say('確認雲端資料夾權限…');   // 上次沒過就讓他重選帳號（可能登錯帳號）
-    const can=()=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${par.id}?fields=capabilities(canAddChildren)`,{},tok),say);
-    let r;try{r=await can()}catch(e){if(e!==404)throw e;say(`請在跳出的視窗點「${par.name}」。`);await gPick(tok,par);r=await can();}
+    tok=await gToken(gGateFail);   // 上次沒過就讓他重選帳號（可能登錯帳號）
+    if(gStale)throw 'stale';   // 等登入的時候被別的分頁接手：不再建資料夾、不跳選擇器
+    if(how==='pick'){say('請在跳出的視窗選一個資料夾。');par=await gPick(tok,null);}
+    else if(how==='new'){say('建立資料夾…');   // 不自動重試：回應沒收到時再送一次會多建一個
+      par={id:(await gApi('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',headers:gJSON,body:JSON.stringify({name:nn,mimeType:'application/vnd.google-apps.folder'})},tok)).id,name:nn};}
+    if(!par)throw 'nofolder';
+    say('確認雲端資料夾權限…');
+    const can=()=>gTry(()=>gApi(`https://www.googleapis.com/drive/v3/files/${par.id}?fields=name,capabilities(canAddChildren)`,{},tok),say);
+    let r;try{r=await can()}catch(e){if(e!==404)throw e;say(`請在跳出的視窗點「${gName(par)}」。`);await gPick(tok,par);r=await can();}
     if(!(r.capabilities&&r.capabilities.canAddChildren))throw 'ro';
-    if(gtok===tok)gTokOk=tok;   // 等確認的時候 gtok 被別次登入換掉了：不改共用的確認狀態（不然會讓那枚已確認的失去背景上傳資格）
-    try{localStorage.setItem('yanwu-gok-w','1');localStorage.removeItem('yanwu-off')}catch(e){}
+    if(fg!==gfGen)throw 'moved';   // 確認途中資料夾換了（按了換資料夾、另一次確認先換成別的）：這次的結果過時了
+    // 第一次透過連結加入（via）時先停一次，寫出雲端硬碟上的真名和資料夾連結，再按一次才放行：
+    // 真名跟連結寫的不一樣（連結的名稱可以亂寫），或這支手機已經有還沒傳的東西（同一天建的別組資料夾也叫「驗屋 日期」，名稱看不出來）
+    if(gStale)throw 'stale';   // 這頁已被別的分頁接手：不寫共用的資料夾設定（會蓋掉新分頁選的；下面兩個 gfSet 都算）
+    const odd=!!(r.name&&r.name!==par.name);np=phFull?gPend():1;   // 照片沒讀完整（或讀不到）＝不確定有沒有待傳，當作有
+    if(!how&&par.via&&!joined&&(odd||np)){said=odd?par.name:'';par={id:par.id,name:r.name||par.name,via:1};gfSet(par);gJoin=par.id;throw 'join';}
+    gfSet({id:par.id,name:r.name||par.name});
+    if(gtok===tok){gTokOk=tok;gTokF=par.id;}   // 等確認的時候 gtok 被別次登入換掉了：不改共用的確認狀態（不然會讓那枚已確認的失去背景上傳資格）
+    try{localStorage.setItem('yanwu-gok-w',par.id);localStorage.removeItem('yanwu-off')}catch(e){}
     gGateFail=0;return tok;   // 回傳確認過的這枚（不再 gToken()：等確認的時候 gtok 可能被別次登入換掉）
   }catch(e){
-    if(gtok===tok||!gOk()){gtok=null;gGateFail=1;}   // 下次按：重新登入並可換帳號。重疊的另一次確認已經放行了別的權杖：不動它（這次的結果已過時）
-    const nm=gFolder().name,why=`可能是①登入的不是申請權限的那個帳號（再按一次會讓你重選帳號），或②這個帳號還沒被加成「${nm}」的編輯者（請資料夾擁有者加好後再按一次）。`;
-    throw {chk:e==='ro'?`這個帳號只能看、不能存進「${nm}」。${why}`:
+    if(!['moved','join','stale'].includes(e)&&(gtok===tok||!gOk())){gtok=null;gGateFail=1;}   // 下次按：重新登入並可換帳號。重疊的另一次確認已經放行了別的權杖：不動它（這次的結果已過時）
+    const nm=gName(par),why=`可能是①登入的不是有權限的那個帳號（再按一次會讓你重選帳號），或②這個帳號還沒被加成「${nm}」的編輯者（請資料夾擁有者在 Google 雲端硬碟把你加成編輯者後再按一次）。`;
+    if(e==='join')throw {url:'https://drive.google.com/drive/folders/'+encodeURIComponent(par.id),
+      chk:(said?`這個資料夾在 Google 雲端硬碟上叫「${nm}」（連結上寫的是「${said}」）。`:`要加入的資料夾是「${nm}」。`)+(np?'這支手機有還沒傳的照片或清單，確定之後會傳到這個資料夾。':'')+
+        '確定是這次驗屋的資料夾，再按一次；不是的話改用別的資料夾（入口的「改用別的資料夾」或基本設定的「換資料夾」）。'};
+    throw {chk:e==='moved'?'確認途中換了雲端資料夾，請再按一次。':e==='nofolder'?'還沒選雲端資料夾，請先建立或選一個。':e==='stale'?'這個網頁在另一個分頁開著，這一頁已停用。':
+      how==='new'&&gNet(e)?`建立資料夾時網路中斷，雲端硬碟裡可能已經建好了「${nn}」。先到雲端硬碟看看：有的話按「登入並選現有的資料夾」選它，沒有再按一次建立。`:
+      e==='ro'?(how==='pick'?`這個帳號只能看、不能存進「${nm}」。請再按一次，選一個你能新增檔案的資料夾。`:`這個帳號只能看、不能存進「${nm}」。${why}`):
+      e==='cancel'&&how==='pick'?'沒有選資料夾，已取消。':
       e==='cancel'||e===404?`沒有選到「${nm}」。如果選擇視窗裡找不到它，${why}`:
       e==='wrong'?`選到的不是「${nm}」。請再按一次，點「${nm}」（第一個分頁沒有的話，到其他分頁或用搜尋找「${nm}」）。都找不到的話，${why}`:
       e==='picker'?'Google 選資料夾的視窗載不出來或出錯（可能網路不穩），請再按一次。':
@@ -1053,28 +1123,43 @@ async function gCheck(say){
 }
 // 上傳按鈕用：手上的權杖確認過就直接用，不然（重新整理過、過期、換帳號、現場先填的）先 gCheck。要在按下去的當下呼叫，登入視窗才不會被擋
 const gReady=say=>gOk()?gToken():gCheck(say);
-$('#g-in').onclick=async()=>{
-  const b=$('#g-in'),m=$('#g-msg');
+// 入口三顆登入鈕：登入 Google（記著的資料夾）、登入並建立新資料夾、登入並選現有的資料夾
+function gGo(how){return async()=>{
+  const bs=['#g-in','#g-new','#g-pick'].map(s=>$(s)),m=$('#g-msg');
   if(gNo()){m.textContent=GNO;return;}
-  b.disabled=true;m.textContent='登入中…';
-  try{await gCheck(t=>m.textContent=t);gate();gAuto();}
-  catch(e){m.textContent=e&&e.chk||gWhy(e);}
-  finally{b.disabled=false;}
-};
+  bs.forEach(b=>b.disabled=true);m.textContent='登入中…';
+  try{await gCheck(t=>m.textContent=t,how);gAsk=0;m.textContent='';gate();gAuto();
+    if(how){const t=`已設定雲端資料夾「${gName(gFolder())}」。到「基本設定」按「分享給同行者」，把連結傳給大家。`;$('#gf-msg').textContent=t;$('#g-cmsg').textContent=t;toast(t);}}
+  catch(e){m.textContent=e&&e.chk||gWhy(e);
+    if(e&&e.url){const a=document.createElement('a');a.href=e.url;a.target='_blank';a.rel='noopener';a.textContent='在雲端硬碟打開這個資料夾看看';m.append(' ',a);}}
+  finally{bs.forEach(b=>b.disabled=false);}};}
+$('#g-in').onclick=gGo();$('#g-new').onclick=gGo('new');$('#g-pick').onclick=gGo('pick');
+$('#g-chg').onclick=()=>{gfSet(null);$('#g-msg').textContent='';gate();};   // 連結帶來的不是要的資料夾：改成建立或選
+// 換資料夾：之後的照片和清單在新的資料夾開新的一輪（舊資料夾裡已傳的不動）
+$('#gf-chg').onclick=()=>{if(gFolder()&&!confirm('換資料夾之後，照片和清單會重新傳到新的資料夾（原本資料夾裡已經傳上去的不會刪）。確定要換？'))return;
+  gfSet(null);gAsk=1;$('#g-msg').textContent='';gate();};
+// 分享給同行者：連結帶資料夾、名稱和樓層配置。openExternalBrowser=1：從 LINE 點開時改用手機的瀏覽器（LINE 內建的瀏覽器不能登入 Google）
+$('#gf-share').onclick=()=>{const F=gFolder(),m=$('#gf-msg');if(!F){gNoF();return;}
+  const u=new URL(location.href);u.search='';u.hash='';u.searchParams.set('f',F.id);if(F.name)u.searchParams.set('n',F.name);u.searchParams.set('l',layEnc(S.c));u.searchParams.set('openExternalBrowser','1');
+  const say=p=>m.textContent=`${p}給同行者的連結：${u.href}　也要在 Google 雲端硬碟把「${gName(F)}」共用給他們，權限選「編輯者」。`;say('');
+  if(navigator.share)navigator.share({title:'驗屋檢查表',url:u.href}).catch(()=>{});
+  else if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(u.href).then(()=>say('已複製。'),()=>{});};
 // 現場沒網路：先不登入，照常勾選、拍照；按上傳時才登入並確認權限（gReady）。記在這台裝置，重開網頁也不再擋
-$('#g-off').onclick=()=>{try{localStorage.setItem('yanwu-off','1')}catch(e){}gate();syncBtn();};
+$('#g-off').onclick=()=>{try{localStorage.setItem('yanwu-off','1')}catch(e){}gAsk=0;gate();syncBtn();};
 $('#g-go').onclick=()=>{const v=$('#g-cin').value.trim();
   if(!v){$('#g-cmsg').textContent='請先填代號。';return;}
   S.code=v;save();render();gate();};
 $('#g-cin').onkeydown=e=>{if(e.key==='Enter')$('#g-go').click();};
 $('#o-use').onclick=()=>{gLeave=1;location.reload();};   // 重新載入＝讀最新的資料並接手（載入時會把自己設成使用中的分頁）
 $('#gup').onclick=()=>{if(gate())return;const m=$('#gmsg'),b=$('#gup');
+  if(gNoF())return;
   if(gNo()){m.textContent=GNO;return;}
   const tp=gReady(t=>m.textContent=t);b.disabled=true;m.textContent='準備上傳…';
   gSync(tp,true,t=>m.textContent=t).then(R=>{const miss=noPh();
     m.innerHTML=`已存到「${esc(R.par.name)}／${esc(R.name)}」：缺失清單已更新，照片 ${Object.keys(R.up).length} 張。${miss?`<b>還有 ${miss} 項沒拍照。</b>`:''}<a href="${esc(R.f.webViewLink||'')}" target="_blank" rel="noopener">打開資料夾</a>`;},
     e=>{m.textContent=gFail(e,'first');}).finally(()=>b.disabled=false);};
 $('#sync').onclick=()=>{if(gate())return;
+  if(gNoF())return;
   if(gNo()){toast(GNO);return;}
   const tp=gReady(toast);
   if(!gPend()){tp.then(()=>{syncShow();toast('已登入，進度會在幾秒內更新到雲端。');},e=>toast(gFail(e,'first')));return;}   // 只剩進度沒寫：登入就好，syncShow→progSoon 會寫
@@ -1141,9 +1226,24 @@ window.addEventListener('afterprint',()=>shut.forEach(d=>d.open=false));
 $('#nav').addEventListener('click',e=>{const a=e.target.closest('a'),d=a&&document.querySelector(a.getAttribute('href'));if(d&&d.tagName==='DETAILS')d.open=true;});
 $('#clr').onclick=()=>{if(confirm('清除所有勾選、備註與照片？複驗紀錄也會一起清掉；攜帶工具清單、間數、代號、我負責會保留。')){S=Object.assign(fresh(),{p:S.p,c:S.c,code:S.code,who:S.who});save();gGen++;gResSet('first',null);gResSet('re',null);for(const k in PH)delete PH[k];idb('readwrite',st=>st.clear()).catch(()=>{});$('#outp').hidden=true;$('#re-outp').hidden=true;render();renderRe();}};
 
+// 用分享連結打開（?f=資料夾&n=名稱&l=樓層配置）：記下資料夾、套用樓層配置，再把參數從網址拿掉（重新整理不再套一次）。
+// 這台已經確認過別的資料夾、或換配置會讓有勾選、備註或照片的空間不列出：先問。資料夾編號不合格式的連結整個不理（樓層也不套）
+(()=>{const q=new URLSearchParams(location.search),f=q.get('f'),c=layDec(q.get('l'));if(!q.has('f')&&!c)return;
+  try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+  const F=gFolder(),nf=/^[\w-]{10,200}$/.test(f||'')?{id:f,name:(q.get('n')||'').slice(0,100)}:null;
+  if(q.has('f')&&!nf)return;
+  if(nf&&(!F||F.id!==nf.id)){let had=null;try{had=F&&localStorage.getItem('yanwu-gok-w')===F.id}catch(e){}
+    if(had&&!confirm(`這個連結會把雲端資料夾從「${gName(F)}」換成「${gName(nf)}」，之後的照片和清單會存到新的資料夾。要換嗎？`))return;
+    gfSet({...nf,via:1});}
+  // 照片讀完（IndexedDB 是非同步的）才判斷：只有照片的空間也算；照片沒讀完整就當作會不見、一定先問
+  const was=layEnc(S.c);   // 照片讀完之前自己改了樓層：以他改的為準，連結的不套
+  if(c)phLoaded.then(()=>{if(gStale||layEnc(S.c)!==was||layEnc(c)===was)return;   // 被別的分頁接手：不寫（save 會把這頁舊的整份蓋回共用儲存）
+    const ids=x=>{const o=S.c;S.c=x;const r=new Set(sections().map(s=>s.id));S.c=o;return r},nxt=ids(c),gone=[...ids(S.c)].filter(s=>!nxt.has(s)),
+      lost=gone.length&&(!phFull||[S.v,S.n,PH].some(o=>Object.keys(o).some(k=>gone.includes(k.split('|')[0])&&(o!==PH||o[k].length))));
+    if(!lost||confirm('這個連結的樓層和間數跟這支手機不一樣，換過去之後有些空間不會列出（勾選、備註和照片都還留著，改回來就會出現；已經傳上雲端的照片會先移到垃圾桶）。要換嗎？')){S.c=c;save();render();}});
+})();
 render();
 renderRe();
-if(FIX)document.querySelectorAll('.nofix').forEach(e=>e.hidden=true);
 try{if(localStorage.getItem('yanwu-recheck')){localStorage.removeItem('yanwu-recheck');localStorage.removeItem('yanwu-gok-w');}}catch(e){}   // 上次上傳遇過 403／404：這次打開入口重新確認權限
 if(/^https?:$/.test(location.protocol))progStart();   // 本機測試（file://）不自動讀；測試裡手動呼叫 progGet()
 if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});   // 沒網路也打得開：sw.js 在手機存一份網頁
